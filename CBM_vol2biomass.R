@@ -344,7 +344,7 @@ Init <- function(sim) {
   setkey(gcMeta, growth_curve_component_id)
   gcMeta <- merge(gcMeta, gcThisSim)
 
-  ### CHECK - this in not tested
+  ### TODO CHECK - this in not tested
   if (!unique(unique(userGcM3$GrowthCurveComponentID) == unique(gcMeta$growth_curve_component_id))) {
     stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
   }
