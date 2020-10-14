@@ -703,7 +703,27 @@ Init <- function(sim) {
   increments[id == 34,3:8] <- increments[id == 35,3:8]
   increments[id == 55,3:8] <- increments[id == 56,3:8]
   }
+  incPlots <- m3ToBiomIncOnlyPlots(inc = increments)
 
+  # From: http://www.sthda.com/english/articles/32-r-graphics-essentials/126-combine-multiple-ggplots-in-one-graph/
+  # do.call(ggarrange, rawPlots)
+  sim$checkInc <- do.call(
+    ggarrange,
+    append(
+      incPlots,
+      list(
+        common.legend = TRUE,
+        legend = "right",
+        labels = names(rawPlots),
+        font.label = list(size = 10, color = "black", face = "bold"),
+        label.x = 0.5
+      )
+    )
+  )
+  # dev.new()
+  annotate_figure(sim$checkInc,
+    top = text_grob("Halved increments for simulations merch fol other by gc id", face = "bold", size = 14)
+  )
 
 
   sim$growth_increments <- as.matrix(increments)
