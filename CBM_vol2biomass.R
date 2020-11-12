@@ -46,7 +46,7 @@ defineModule(sim, list(
       )
     )
   ),
-  inputObjects = bind_rows(
+  inputObjects = bindrows(
     # expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     # this are variables in inputed data.tables:SpatialUnitID, EcoBoundaryID, juris_id, ecozone, jur, eco, name, GrowthCurveComponentID, plotsRawCumulativeBiomass, checkInc
     expectsInput(
@@ -91,7 +91,7 @@ defineModule(sim, list(
     expectsInput(objectName = "spatialUnits", objectClass = "data.table", desc = "the table linking the spu id, with the
                   disturbance_matrix_id and the events. The events are the possible raster values from the disturbance rasters of Wulder and White")
   ),
-  outputObjects = bind_rows(
+  outputObjects = bindrows(
     # createsOutput("objectName", "objectClass", "output object description", ...),
     createsOutput(objectName = NA, objectClass = NA, desc = NA),
     createsOutput(objectName = "volCurves", objectClass = "plot", desc = "Plot of all the growth curve provided by the user"),
