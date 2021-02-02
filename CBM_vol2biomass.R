@@ -10,14 +10,13 @@ defineModule(sim, list(
     person("Celine", "Boisvenue", email = "Celine.Boisvenue@canada.ca", role = c("aut", "cre"))
   ),
   childModules = character(0),
-  version = list(SpaDES.core = "0.2.9", CBM_vol2biomass = "0.0.0.9000"),
+  version = list(CBM_vol2biomass = "0.0.0.9000"),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
-    "mgcv", "ggplot2", "quickPlot", "ggpubr",
-    "CBMutils" ## TODO: use PredictiveEcology/CBMutils
+    "ggplot2", "ggpubr", "mgcv", "quickPlot", "PredictiveEcology/CBMutils (>= 0.0.6)"
   ),
   parameters = rbind(
     # defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
