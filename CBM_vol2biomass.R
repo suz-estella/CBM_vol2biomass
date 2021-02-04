@@ -586,7 +586,7 @@ Init <- function(sim) {
   annotate_figure(plotsRawInc,
                   top = text_grob("RawIncrements merch fol other by gc id", face = "bold", size = 14)
   )
-
+  sim$plotsRawInc <- plotsRawInc
   ## calculate the GAMs on increments
   # created smooth cumulative curves using GAMs
   sIncMerch <- NULL
