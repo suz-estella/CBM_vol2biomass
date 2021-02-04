@@ -293,10 +293,10 @@ Init <- function(sim) {
     stop("There is a problem finding a parameter match in table 5.")
   }
 
-  stable6 <- as.data.table(sim$table6[sim$table6$jur %in% thisAdmin$abreviation &
-    sim$table6$eco %in% eco, ])
-  stable7 <- as.data.table(sim$table7[sim$table6$jur %in% thisAdmin$abreviation &
-    sim$table6$eco %in% eco, ])
+  stable6 <- as.data.table(sim$table6[sim$table6$juris_id %in% thisAdmin$abreviation &
+    sim$table6$ecozone %in% eco, ])
+  stable7 <- as.data.table(sim$table7[sim$table7$juris_id %in% thisAdmin$abreviation &
+    sim$table6$ecozone %in% eco, ])
   # END reducing Biomass model parameter tables -----------------------------------------------
 
   # Read-in user provided meta data for growth curves. This could be a complete
@@ -365,12 +365,12 @@ Init <- function(sim) {
     # for each species name, process one gcID at a time
     for (j in 1:length(unique(speciesMeta$growth_curve_component_id))) {
       meta <- speciesMeta[j, ]
-      id <- sim$userGcM3$GrowthCurveComponentID[which(sim$userGcM3$GrowthCurveComponentID == meta$growth_curve_component_id)][-1]
+      id <- userGcM3$GrowthCurveComponentID[which(userGcM3$GrowthCurveComponentID == meta$growth_curve_component_id)][-1]
       ## IMPORTANT BOURDEWYN PARAMETERS FOR NOT HANDLE AGE 0 ##
-      age <- sim$userGcM3[GrowthCurveComponentID == meta$growth_curve_component_id, Age][-1]
+      age <- userGcM3[GrowthCurveComponentID == meta$growth_curve_component_id, Age][-1]
       # series of fncts results in curves of merch, foliage and other (SW or HW)
       cumBiom <- as.matrix(convertM3biom(
-        meta = meta, gCvalues = sim$userGcM3, spsMatch = gcMeta,
+        meta = meta, gCvalues = userGcM3, spsMatch = gcMeta,
         ecozones = thisAdmin, params3 = unique(stable3), params4 = unique(stable4),
         params5 = unique(stable5), params6 = unique(stable6), params7 = unique(stable7)
       ))
@@ -980,6 +980,8 @@ Event2 <- function(sim) {
   }
 
   # tables from Boudewyn
+  # these are all downloaded from the NFIS site. The NFIS however, changes the
+  # tables and seems to forget parameter coumns at times. So, we added a check to
   if (!suppliedElsewhere("table3", sim)) {
     # sim$table3 <- fread(extractURL("table3"))
     # this does not work
@@ -988,29 +990,83 @@ Event2 <- function(sim) {
     # this does not work either, but the one below does ***HELP FIX PLEASE SO IT
     # CAN READ THE URL DIRECTLY***
     sim$table3 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv")
+    # these are the columns needed in the functions for calculating biomass
+    t3hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
+                      "a", "b", "volm")
+    if(!length(which(colnames(sim$table3) %in% t3hasToHave)) == length(t3hasToHave)){
+      message(
+        "The parameter table (appendix2_table3) does not have the expected number of columns. ",
+        "This means parameters are missing. The default (older) parameter file will be used instead."
+        )
+      sim$table3 <- fread(file.path("modules","CBM_vol2biomass","data","appendix2_table3.csv"))
+      ## TODO: use url to googleDrive (G:\userDataDefaultsCBM_SK)
+    }
   }
   if (!suppliedElsewhere("table4", sim)) {
     ### HELP: the .csv has a colum with commas! it puts that column in two columns...
     # table4 <- fread(extractURL("table4"))
     # work around
     sim$table4 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv")
+    t4hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
+                      "a", "b", "k", "cap", "volm")
+    if(!length(which(colnames(sim$table4) %in% t4hasToHave)) == length(t4hasToHave)){
+      message(
+        "The parameter table (appendix2_table4) does not have the expected number of columns. ",
+        "This means parameters are missing. The default (older) parameter file will be used instead."
+      )
+      sim$table4 <- fread(file.path("modules","CBM_vol2biomass","data","appendix2_table4.csv"))
+      ## TODO: use url to googleDrive (G:\userDataDefaultsCBM_SK)
+    }
+
   }
   if (!suppliedElsewhere("table5", sim)) {
     ### HELP: the .csv has a colum with commas! it puts that column in two
     # columns... table5 <- fread(extractURL("table5")) work around
     sim$table5 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv")
+    t5hasToHave <- c("juris_id", "ecozone", "canfi_genus", "genus", "a", "b", "k",
+                      "cap", "volm")
+    if(!length(which(colnames(sim$table5) %in% t5hasToHave)) == length(t5hasToHave)){
+      message(
+        "The parameter table (appendix2_table5) does not have the expected number of columns. ",
+        "This means parameters are missing. The default (older) parameter file will be used instead."
+      )
+      sim$table5 <- fread(file.path("modules","CBM_vol2biomass","data","appendix2_table5.csv"))
+      ## TODO: use url to googleDrive (G:\userDataDefaultsCBM_SK)
+    }
   }
   if (!suppliedElsewhere("table6", sim)) {
     ### HELP: the .csv has a colum with commas! it puts that column in two columns...
     # table6 <- fread(extractURL("table6"))
     # work around
-    sim$table6 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv")
+    sim$table6 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv",
+                        fill = TRUE)
+    t6hasToHave <- c("juris_id", "ecozone", "canfi_species", "a1", "a2", "a3", "b1", "b2", "b3",
+                     "c1", "c2", "c3" )
+    if(!length(which(colnames(sim$table6) %in% t6hasToHave)) == length(t6hasToHave)){
+      message(
+        "The parameter table (appendix2_table6) does not have the expected number of columns. ",
+        "This means parameters are missing. The default (older) parameter file will be used instead."
+      )
+      sim$table6 <- fread(file.path("modules","CBM_vol2biomass","data","appendix2_table6.csv"))
+      ## TODO: use url to googleDrive (G:\userDataDefaultsCBM_SK)
+    }
   }
   if (!suppliedElsewhere("table7", sim)) {
     ### HELP: the .csv has a colum with commas! it puts that column in two columns...
     # table7 <- fread(extractURL("table7"))
     # work around
     sim$table7 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv")
+    t7hasToHave <- c("juris_id", "ecozone", "canfi_species", "vol_min", "vol_max", "p_sw_low",
+                     "p_sb_low", "p_br_low", "p_fl_low", "p_sw_high", "p_sb_high", "p_br_high",
+                     "p_fl_high")
+    if(!length(which(colnames(sim$table7) %in% t7hasToHave)) == length(t7hasToHave)){
+      message(
+        "The parameter table (appendix2_table7) does not have the expected number of columns. ",
+        "This means parameters are missing. The default (older) parameter file will be used instead."
+      )
+      sim$table7 <- fread(file.path("modules","CBM_vol2biomass","data","appendix2_table7.csv"))
+      ## TODO: use url to googleDrive (G:\userDataDefaultsCBM_SK)
+    }
   }
 
   if (!suppliedElsewhere("gcMeta", sim)) {
