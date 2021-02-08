@@ -694,13 +694,13 @@ Init <- function(sim) {
 
   ## these are the fixes needed to make the smoothed increments curves usable
   ## for simulation in the default example provided.
-  hardFixes <- readline(prompt = "Are you use the default example for this simulation? \n Press Y for yes or N for no.")
+  hardFixes <- readline(prompt = "Use the default example for this simulation? (y/N): ")
   if (toupper(hardFixes) == "Y") {
-     ### Danger hard coded fixes to see if the age=0 issue ("stuck in spinup")
-  ### Using the smoothed increment
-  ## replace id 34 with 35, and 55 with 56.
-  increments[id == 34,3:8] <- increments[id == 35,3:8]
-  increments[id == 55,3:8] <- increments[id == 56,3:8]
+    ### Danger hard coded fixes to see if the age=0 issue ("stuck in spinup")
+    ### Using the smoothed increment
+    ## replace id 34 with 35, and 55 with 56.
+    increments[id == 34, 3:8] <- increments[id == 35, 3:8]
+    increments[id == 55, 3:8] <- increments[id == 56, 3:8]
   }
   incPlots <- m3ToBiomIncOnlyPlots(inc = increments)
 
