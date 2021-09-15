@@ -37,7 +37,7 @@ defineModule(sim, list(
       "This describes the simulation time interval between save events."
     ),
     defineParameter(
-      ".useCache", "logical", FALSE, NA, NA,
+      ".useCache", "logical", TRUE, NA, NA,
       paste(
         "Should this entire module be run with caching activated?",
         "This is generally intended for data-type modules, where stochasticity",
@@ -48,6 +48,8 @@ defineModule(sim, list(
   inputObjects = bindrows(
     # expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     # this are variables in inputed data.tables:SpatialUnitID, EcoBoundaryID, juris_id, ecozone, jur, eco, name, GrowthCurveComponentID, plotsRawCumulativeBiomass, checkInc
+    expectsInput(objectName = "curveID", objectClass = "character",
+                 desc = "Vector of column names that together, uniquely define growth curve id"),
     expectsInput(
       objectName = "table3", objectClass = "dataframe", desc = "Stem wood biomass model parameters for merchantable-sized trees from Boudewyn et al 2007",
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv"
@@ -189,6 +191,27 @@ doEvent.CBM_vol2biomass <- function(sim, eventTime, eventType) {
 Init <- function(sim) {
   # user provides userGcM3: incoming cumulative m3/ha
   # plot
+
+  # user provides userGcM3: incoming cumulative m3/ha
+  # plot
+  # Test for steps of 1 in the yield curves
+  ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = "GrowthCurveComponentID"]
+  idsWithJumpGT1 <- ageJumps[jumps > 1]$GrowthCurveComponentID
+  if (length(idsWithJumpGT1)) {
+    missingAboveMin <- sim$userGcM3[, approx(Age, MerchVolume, xout = setdiff(seq(0, max(Age)), Age)),
+                                    by = "GrowthCurveComponentID"]
+    setnames(missingAboveMin, c("x", "y"), c("Age", "MerchVolume"))
+    missingAboveMin <- na.omit(missingAboveMin)
+    sim$userGcM3 <- rbindlist(list(sim$userGcM3, missingAboveMin))
+    setorderv(sim$userGcM3, c("GrowthCurveComponentID", "Age"))
+
+    # Assertion
+    ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = "GrowthCurveComponentID"]
+    idsWithJumpGT1 <- ageJumps[jumps > 1]$GrowthCurveComponentID
+    if (length(idsWithJumpGT1) > 0)
+      stop("There are still yield curves that are not annually resolved")
+  }
+
   sim$volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = GrowthCurveComponentID, colour = GrowthCurveComponentID)) +
     geom_line() ## TODO: move to plotInit event
   message("User: please look at the curve you provided via sim$volCurves")
@@ -199,7 +222,14 @@ Init <- function(sim) {
   # if(!suppliedElsewhere("level3DT",sim)){
   #   userGcM3 <- sim$userGcM3
   # }else{
-  userGcM3 <- sim$userGcM3[GrowthCurveComponentID %in% unique(sim$gcids), ]
+  userGcM3 <- sim$userGcM3
+  spu <- unique(sim$spatialUnits)
+  eco <- unique(sim$ecozones)
+
+  thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% spu & sim$cbmAdmin$EcoBoundaryID %in% eco, ]
+
+
+  ####userGcM3 <- sim$userGcM3[GrowthCurveComponentID %in% unique(sim$gcids), ]
   # }
 
   # START reducing Biomass model parameter tables -----------------------------------------------
@@ -208,15 +238,15 @@ Init <- function(sim) {
   # if(!suppliedElsewhere("spatialUnits",sim)){
   #   spu  <- ### USER TO PROVIDE SPU FOR EACH gcID###########
   # }else{
-  spu <- unique(sim$spatialUnits)
+  ####spu <- unique(sim$spatialUnits)
   # }
   # if(!suppliedElsewhere("ecozones",sim)){
   #   eco <- ### USER TO PROVIDE SPU FOR EACH gcID###########
   # }else{
 
-  eco <- unique(sim$ecozones)
+  ####eco <- unique(sim$ecozones)
   # }
-  thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% spu & sim$cbmAdmin$EcoBoundaryID %in% eco, ]
+  ####thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% spu & sim$cbmAdmin$EcoBoundaryID %in% eco, ]
 
   # "s" table for small table3, 4, 5, 6, 7 - tables limited to the targeted
   # ecozones and jurisdictions
@@ -244,9 +274,9 @@ Init <- function(sim) {
     # "NU" - NT
     abreviation <- c("PE", "QC", "ON", "MB", "SK", "YK", "NU")
     t5abreviation <- c("NB", "NB", "NB", "AB", "AB", "NT", "NT")
-    abreviaReplace <- data.table(abreviation, t5abreviation)
+    abreviationReplace <- data.table(abreviation, t5abreviation)
     # replace the abbreviations and select
-    thisAdmin5 <- merge(abreviaReplace, thisAdmin)
+    thisAdmin5 <- merge(abreviationReplace, thisAdmin)
     thisAdmin5[, c("abreviation", "t5abreviation") := list(t5abreviation, NULL)]
     stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin5$abreviation, ])
   }
@@ -325,6 +355,7 @@ Init <- function(sim) {
         , which(name %in% gcMeta2$species),
         .(canfi_species, genus, name, forest_type_id)
       ]
+      spsMatch[, V1 := NULL]
       names(spsMatch) <- c("canfi_species", "genus", "species", "forest_type_id")
       setkey(gcMeta2, species)
       setkey(spsMatch, species)
@@ -334,19 +365,38 @@ Init <- function(sim) {
     ### PUT SOMETHING HERE IF THE SPECIES DONT MATCH...NOT SURE WHAT - ERROR MESSAGE?
   }
 
+
+  # ### TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
+  # if (!unique(unique(userGcM3$GrowthCurveComponentID) == unique(gcMeta$growth_curve_component_id))) {
+  #   stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
+  # }
+
+  # curveID are the columns use to make the unique levels in the factor gcids.
+  # These factor levels are the link between the pixelGroups and the curve to be
+  # use to growth their AGB. In this case (SK) the levels of the factor need to
+  # come from the gcMeta, not the level3DT. Just in case all growth curves need
+  # to be processed. If sim$level3DT exist, its gcids needs to match these.
+browser()
+  curveID <- sim$curveID
+  gcids <- factor(gcidsCreate(gcMeta[, ..curveID]))
+  setDT(gcMeta)
+  set(gcMeta, NULL, "gcids", gcids)
+
+ # if (!is.null(sim$level3DT)) {
+  #   gcidsLevels <- levels(gcids)
+  #   gcids <- factor(gcidsCreate(sim$levelDT[, ..curveID]), levels = gcidsLevels)
+  #  }
+
   # assuming gcMeta has now 6 columns, it needs a 7th: spatial_unit_id. This
   # will be used in the convertM3biom() fnct to link to the right ecozone
   # and it only needs the gc we are using in this sim.
-  gcThisSim <- as.data.table(unique(cbind(sim$spatialUnits, sim$gcids)))
-  names(gcThisSim) <- c("spatial_unit_id", "growth_curve_component_id")
+  gcThisSim <- unique(sim$spatialDT[,.(growth_curve_component_id, spatial_unit_id)])#, ecozones
+  #gcThisSim <- as.data.table(unique(cbind(sim$spatialUnits, sim$gcids)))
+  #names(gcThisSim) <- c("spatial_unit_id", "growth_curve_component_id")
   setkey(gcThisSim, growth_curve_component_id)
   setkey(gcMeta, growth_curve_component_id)
   gcMeta <- merge(gcMeta, gcThisSim)
 
-  ### TODO CHECK - this in not tested
-  if (!unique(unique(userGcM3$GrowthCurveComponentID) == unique(gcMeta$growth_curve_component_id))) {
-    stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
-  }
 
   # START processing curves from m3/ha to tonnes of C/ha then to annual increments
   # per above ground biomass pools -------------------------------------------
@@ -978,6 +1028,11 @@ Event2 <- function(sim) {
     }
     names(sim$userGcM3) <- c("GrowthCurveComponentID", "Age", "MerchVolume")
   }
+
+  if (!suppliedElsewhere("curveID", sim)) {
+    sim$curveID <- c("growth_curve_component_id")#, "ecozones")
+  }
+
 
   # tables from Boudewyn
   # these are all downloaded from the NFIS site. The NFIS however, changes the
