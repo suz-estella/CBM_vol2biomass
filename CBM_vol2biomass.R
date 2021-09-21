@@ -77,8 +77,10 @@ defineModule(sim, list(
       sourceURL = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz"
     ),
     expectsInput(objectName = "gcMeta", objectClass = "dataframe", desc = "Provides equivalent between provincial boundaries,
-                 CBM-id for provincial boundaries and CBM-spatial unit ids", sourceURL = NA),
-    expectsInput(objectName = "gcMetaFile", objectClass = "character", desc = "File name and location for the user provided gcMeta dataframe", sourceURL = NA),
+                 CBM-id for provincial boundaries and CBM-spatial unit ids",
+                 sourceURL = "https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true"),
+    expectsInput(objectName = "gcMetaFile", objectClass = "character",
+                 desc = "File name and location for the user provided gcMeta dataframe", sourceURL = NA),
     expectsInput(objectName = "canfi_species", objectClass = "dataframe", desc = "File containing the possible species in the Boudewyn table - note
                  that if Boudewyn et al added species, this should be updated. Also note that such an update is very unlikely", sourceURL = NA),
     expectsInput(objectName = "userGcM3File", objectClass = "character", desc = "User file name for the files containing:
@@ -389,7 +391,7 @@ Init <- function(sim) {
   # use to growth their AGB. In this case (SK) the levels of the factor need to
   # come from the gcMeta, not the level3DT. Just in case all growth curves need
   # to be processed. If sim$level3DT exist, its gcids needs to match these.
-browser()
+
   curveID <- sim$curveID
 ######## THESE WERE MY CHANGES BUT THEY SEEM TO CAUS AN ERROR IN THE SPINUP
   # gcids <- factor(gcidsCreate(gcMeta[, ..curveID]))
@@ -896,12 +898,18 @@ Event2 <- function(sim) {
     }
   }
 
+
   if (!suppliedElsewhere("gcMeta", sim)) {
-    if (!suppliedElsewhere("gcMetaFile", sim)) {
-      sim$gcMetaFile <- file.path(dPath, "gcMetaEg.csv") ## TODO: use prepInputs with url
-      # or could use this "https://drive.google.com/file/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/view?usp=sharing"
-      sim$gcMeta <- fread(sim$gcMetaFile)
-    }
+    # if (!suppliedElsewhere("gcMetaFile", sim)) {
+    #   sim$gcMeta <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true",
+    #                            fun = "data.table::fread",
+    #                            destinationPath = dPath,
+    #                            #purge = 7,
+    #                            filename2 = "gcMetaEg.csv")
+    #  } else {
+
+      sim$gcMeta <- fread(file.path(dPath, "gcMetaEg.csv"))
+    # }
   }
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
