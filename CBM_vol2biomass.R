@@ -234,7 +234,6 @@ Init <- function(sim) {
 
   thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% spu & sim$cbmAdmin$EcoBoundaryID %in% eco, ]
 
-
   ####userGcM3 <- sim$userGcM3[GrowthCurveComponentID %in% unique(sim$gcids), ]
   # }
 
@@ -371,7 +370,6 @@ Init <- function(sim) {
     ### PUT SOMETHING HERE IF THE SPECIES DONT MATCH...NOT SURE WHAT - ERROR MESSAGE?
   }
 
-
   # ### TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
   # if (!unique(unique(userGcM3$GrowthCurveComponentID) == unique(gcMeta$growth_curve_component_id))) {
   #   stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
@@ -406,15 +404,12 @@ Init <- function(sim) {
 
   set(gcMeta, NULL, "gcids", gcids)
 
-
- # if (!is.null(sim$level3DT)) {
+  # if (!is.null(sim$level3DT)) {
   #   gcidsLevels <- levels(gcids)
   #   gcids <- factor(gcidsCreate(sim$levelDT[, ..curveID]), levels = gcidsLevels)
   #  }
 
-
   sim$gcMetaAllCols <- gcMeta
-
 
   # START processing curves from m3/ha to tonnes of C/ha then to annual increments
   # per above ground biomass pools -------------------------------------------
@@ -483,11 +478,11 @@ Init <- function(sim) {
   cumPoolsClean <- Cache(cumPoolsSmooth, cumPoolsRaw)
 
   # a[, totMerch := totMerchNew]
-  if (!is.na(P(sim)$.plotInitialTime))
+  if (!is.na(P(sim)$.plotInitialTime)) {
     figs <- Cache(m3ToBiomPlots, inc = cumPoolsClean,
                   path = figPath,
                   filenameBase = "cumPools_smoothed_postChapmanRichards")
-
+  }
   set(cumPoolsClean, NULL, colNames, NULL)
   colNamesNew <- grep(cbmAboveGroundPoolColNames, colnames(cumPoolsClean), value = TRUE)
   setnames(cumPoolsClean, old = colNamesNew, new = colNames)
@@ -497,14 +492,14 @@ Init <- function(sim) {
   cumPoolsClean[, (incCols) := lapply(.SD, function(x) c(NA, diff(x))), .SDcols = colNames,
                 by = eval("gcids")]
   colsToUse33 <- c("age", "gcids", incCols)
-  if (!is.na(P(sim)$.plotInitialTime))
+  if (!is.na(P(sim)$.plotInitialTime)) {
     rawIncPlots <- Cache(m3ToBiomPlots, inc = cumPoolsClean[, ..colsToUse33],
                          path = figPath,
                          title = "Smoothed increments merch fol other by gc id",
                          filenameBase = "Increments")
+  }
   message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
                       figPath))
-
 
   sim$cumPoolsClean <- cumPoolsClean
 
@@ -579,28 +574,6 @@ plotFun <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   # do stuff for this event
   # Plot(sim$object)
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-### template for your event1
-Event1 <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # THE NEXT TWO LINES ARE FOR DUMMY UNIT TESTS; CHANGE OR DELETE THEM.
-  # sim$event1Test1 <- " this is test for event 1. " # for dummy unit test
-  # sim$event1Test2 <- 999 # for dummy unit test
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-### template for your event2
-Event2 <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # THE NEXT TWO LINES ARE FOR DUMMY UNIT TESTS; CHANGE OR DELETE THEM.
-  # sim$event2Test1 <- " this is test for event 2. " # for dummy unit test
-  # sim$event2Test2 <- 777  # for dummy unit test
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
@@ -807,7 +780,6 @@ Event2 <- function(sim) {
     sim$curveID <- c("growth_curve_component_id")#, "ecozones")
   }
 
-
   # tables from Boudewyn
   # these are all downloaded from the NFIS site. The NFIS however, changes the
   # tables and seems to forget parameter coumns at times. So, we added a check to
@@ -820,9 +792,8 @@ Event2 <- function(sim) {
     # CAN READ THE URL DIRECTLY***
     sim$table3 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv")
     # these are the columns needed in the functions for calculating biomass
-    t3hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
-                      "a", "b", "volm")
-    if(!length(which(colnames(sim$table3) %in% t3hasToHave)) == length(t3hasToHave)){
+    t3hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species", "a", "b", "volm")
+    if (!length(which(colnames(sim$table3) %in% t3hasToHave)) == length(t3hasToHave)) {
       message(
         "The parameter table (appendix2_table3) does not have the expected number of columns. ",
         "This means parameters are missing. The default (older) parameter file will be used instead."
@@ -838,7 +809,7 @@ Event2 <- function(sim) {
     sim$table4 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv")
     t4hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
                       "a", "b", "k", "cap", "volm")
-    if(!length(which(colnames(sim$table4) %in% t4hasToHave)) == length(t4hasToHave)){
+    if (!length(which(colnames(sim$table4) %in% t4hasToHave)) == length(t4hasToHave)) {
       message(
         "The parameter table (appendix2_table4) does not have the expected number of columns. ",
         "This means parameters are missing. The default (older) parameter file will be used instead."
@@ -846,20 +817,18 @@ Event2 <- function(sim) {
       sim$table4 <- fread(file.path("modules","CBM_vol2biomass","data","appendix2_table4.csv"))
       ## TODO: use url to googleDrive (G:\userDataDefaultsCBM_SK)
     }
-
   }
   if (!suppliedElsewhere("table5", sim)) {
     ### HELP: the .csv has a colum with commas! it puts that column in two
     # columns... table5 <- fread(extractURL("table5")) work around
     sim$table5 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv")
-    t5hasToHave <- c("juris_id", "ecozone", "canfi_genus", "genus", "a", "b", "k",
-                      "cap", "volm")
-    if(!length(which(colnames(sim$table5) %in% t5hasToHave)) == length(t5hasToHave)){
+    t5hasToHave <- c("juris_id", "ecozone", "canfi_genus", "genus", "a", "b", "k", "cap", "volm")
+    if (!length(which(colnames(sim$table5) %in% t5hasToHave)) == length(t5hasToHave)) {
       message(
         "The parameter table (appendix2_table5) does not have the expected number of columns. ",
         "This means parameters are missing. The default (older) parameter file will be used instead."
       )
-      sim$table5 <- fread(file.path("modules","CBM_vol2biomass","data","appendix2_table5.csv"))
+      sim$table5 <- fread(file.path("modules", "CBM_vol2biomass", "data", "appendix2_table5.csv"))
       ## TODO: use url to googleDrive (G:\userDataDefaultsCBM_SK)
     }
   }
@@ -867,11 +836,10 @@ Event2 <- function(sim) {
     ### HELP: the .csv has a colum with commas! it puts that column in two columns...
     # table6 <- fread(extractURL("table6"))
     # work around
-    sim$table6 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv",
-                        fill = TRUE)
+    sim$table6 <- fread("https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv", fill = TRUE)
     t6hasToHave <- c("juris_id", "ecozone", "canfi_species", "a1", "a2", "a3", "b1", "b2", "b3",
                      "c1", "c2", "c3" )
-    if(!length(which(colnames(sim$table6) %in% t6hasToHave)) == length(t6hasToHave)){
+    if (!length(which(colnames(sim$table6) %in% t6hasToHave)) == length(t6hasToHave)) {
       message(
         "The parameter table (appendix2_table6) does not have the expected number of columns. ",
         "This means parameters are missing. The default (older) parameter file will be used instead."
@@ -888,7 +856,7 @@ Event2 <- function(sim) {
     t7hasToHave <- c("juris_id", "ecozone", "canfi_species", "vol_min", "vol_max", "p_sw_low",
                      "p_sb_low", "p_br_low", "p_fl_low", "p_sw_high", "p_sb_high", "p_br_high",
                      "p_fl_high")
-    if(!length(which(colnames(sim$table7) %in% t7hasToHave)) == length(t7hasToHave)){
+    if (!length(which(colnames(sim$table7) %in% t7hasToHave)) == length(t7hasToHave)) {
       message(
         "The parameter table (appendix2_table7) does not have the expected number of columns. ",
         "This means parameters are missing. The default (older) parameter file will be used instead."
@@ -897,7 +865,6 @@ Event2 <- function(sim) {
       ## TODO: use url to googleDrive (G:\userDataDefaultsCBM_SK)
     }
   }
-
 
   if (!suppliedElsewhere("gcMeta", sim)) {
     # if (!suppliedElsewhere("gcMetaFile", sim)) {
