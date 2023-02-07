@@ -265,19 +265,20 @@ Init <- function(sim) {
   # This first If-statement is to catch the "no-province" match
 
   stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin$abreviation, ])
-  if (!length(unique(stable5.2$juris_id)) == length(unique(thisAdmin$abreviation))) {
-    ## DANGER HARD CODED: if NFIS changes table 5, this will no longer be valid
-    # juris_id: there are only 5/13 possible
-    # these are the provinces available: AB BC NB NF NT
-    # for the non match these would be the equivalent
-    # "PE" - NB
-    # "QC" - NB
-    # "ON" - NB
-    # "MB" - AB
-    # "SK" - AB
-    # "YK" - NT
-    # "NU" - NT
-    abreviation <- c("PE", "QC", "ON", "MB", "SK", "YK", "NU")
+  ## DANGER HARD CODED: if NFIS changes table 5, this will no longer be valid
+  # juris_id: there are only 5/13 possible
+  # these are the provinces available: AB BC NB NF NT
+  # for the non match these would be the equivalent
+  # "PE" - NB
+  # "QC" - NB
+  # "ON" - NB
+  # "MB" - AB
+  # "SK" - AB
+  # "YK" - NT
+  # "NU" - NT
+  abreviation <- c("PE", "QC", "ON", "MB", "SK", "YK", "NU")
+
+  if (any(thisAdmin$abreviation %in% abreviation)) {
     t5abreviation <- c("NB", "NB", "NB", "AB", "AB", "NT", "NT")
     abreviationReplace <- data.table(abreviation, t5abreviation)
     # replace the abbreviations and select
@@ -317,11 +318,11 @@ Init <- function(sim) {
     # 16  Taiga Shield East - 5  Taiga Shield West
     # 17 Boreal Shield East - 6 Boreal Shield West
     # 18  Semiarid Prairies - 10  Subhumid Prairies
-
-    EcoBoundaryID <- c(8, 11, 15, 16, 17, 18)
-    ecoNotInT5 <- c(7, 4, 6, 5, 6, 10)
-    ecoReplace <- data.table(ecoNotInT5, EcoBoundaryID)
-    thisAdmin5.1 <- merge(ecoReplace, thisAdmin5, by = EcoBoundaryID)
+browser()
+    ecoInT5<- c(8, 11, 15, 16, 17, 18)
+    EcoBoundaryID <- c(7, 4, 6, 5, 6, 10)
+    ecoReplace <- data.table(ecoInT5, EcoBoundaryID)
+    thisAdmin5.1 <- merge(ecoReplace, thisAdmin5, by = "EcoBoundaryID")
     stable5 <- as.data.table(stable5[stable5$ecozone %in% thisAdmin5.1$EcoBoundaryID, ])
   }
   if (nrow(stable5) < 1) {
@@ -867,8 +868,9 @@ plotFun <- function(sim) {
   }
 
   if (!suppliedElsewhere("gcMeta", sim)) {
+    ##TODO can't figure out why it won't read this file. Copied file manually.
     # if (!suppliedElsewhere("gcMetaFile", sim)) {
-    #   sim$gcMeta <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true",
+    #   sim$gcMeta <- prepInputs(url ="https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true",
     #                            fun = "data.table::fread",
     #                            destinationPath = dPath,
     #                            #purge = 7,
@@ -882,7 +884,15 @@ plotFun <- function(sim) {
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the
   # adminName to avoid confusion.
+##TODO need to read this off the googleDrive. Same as $gcMeta
   if (!suppliedElsewhere("cbmAdmin", sim)) {
+    # sim$cbmAdmin <- prepInputs(
+    #   url = "https://docs.google.com/spreadsheets/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz/edit?usp=share_link&ouid=108246386320559871010&rtpof=true&sd=true",
+    #   fun = "data.table::fread",
+    #   destinationPath = dPath,
+    #   filename2 = "cbmAdmin.csv"
+    # )
+
     sim$cbmAdmin <- fread(file.path(dPath, "cbmAdmin.csv")) ## TODO: use prepInputs with url
   }
 
