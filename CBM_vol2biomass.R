@@ -16,7 +16,8 @@ defineModule(sim, list(
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
-    "ggplot2", "ggpubr", "mgcv", "quickPlot", "PredictiveEcology/CBMutils (>= 0.0.6)",
+    "ggplot2", "ggpubr", "mgcv", "quickPlot",
+    "PredictiveEcology/CBMutils@development",
     "robustbase", "ggforce"
   ),
   parameters = rbind(
@@ -230,7 +231,7 @@ Init <- function(sim) {
   # }else{
   userGcM3 <- sim$userGcM3
   spu <- unique(sim$spatialUnits)
-  eco <- unique(sim$ecozones)
+  eco <- unique(na.omit(sim$ecozones))
 
   thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% spu & sim$cbmAdmin$EcoBoundaryID %in% eco, ]
 
@@ -260,7 +261,10 @@ Init <- function(sim) {
   stable4 <- as.data.table(sim$table4[sim$table4$juris_id %in% thisAdmin$abreviation &
     sim$table4$ecozone %in% eco, ])
   # table5 is different since there was not have enough data to fit models for
-  # all provinces. Here we are hard-coding the closest equivalent province to
+  # all provinces.
+  # unique(sim$table5$juris_id)
+  # [1] "AB" "BC" "NB" "NL" "NT"
+  # Here we are hard-coding the closest equivalent province to
   # have a complete set.
   # This first If-statement is to catch the "no-province" match
 
@@ -289,39 +293,41 @@ Init <- function(sim) {
   # This second "if-statement" is to catch is the "no-ecozone" match
   ### THIS NEEDS TO BE TESTED
   if (nrow(stable5.2) > 0) {
-    stable5 <- stable5.2[ecozone %in% unique(eco), ]
+    stable5 <- stable5.2[ecozone %in% eco, ]
   } else {
     stop(
       "There are no matches found for the parameters needed to execute the Boudewyn models.",
       "Please manually find matches for table 5."
     )
   }
-  if (!length(eco) == length(unique(stable5$ecozone))) {
-    # there are 9/15 ecozones
-    # These are the ones in table5
-    # id               name
-    # 4       Taiga Plains
-    # 5  Taiga Shield West
-    # 6 Boreal Shield West
-    # 7  Atlantic Maritime
-    # 9      Boreal Plains
-    # 10  Subhumid Prairies
-    # 12  Boreal Cordillera
-    # 13   Pacific Maritime
-    # 14 Montane Cordillera
 
-    # these are the ones that are not
-    # id               name
-    # 8   Mixedwood Plains  - 7  Atlantic Maritime
-    # 11   Taiga Cordillera - 4 taiga plains
-    # 15      Hudson Plains - 6 Boreal Shield West
-    # 16  Taiga Shield East - 5  Taiga Shield West
-    # 17 Boreal Shield East - 6 Boreal Shield West
-    # 18  Semiarid Prairies - 10  Subhumid Prairies
-browser()
-    ecoInT5<- c(8, 11, 15, 16, 17, 18)
+  # there are 12/15 ecozones in table5. Once you narrow the table to admin
+  # abreviation (which is done above), there might be more mismatch. This
+  # solution only works for SK.
+  # These are the ones in table5
+  # id               name
+  # 4       Taiga Plains
+  # 5  Taiga Shield West
+  # 6 Boreal Shield West
+  # 7  Atlantic Maritime
+  # 9      Boreal Plains
+  # 10  Subhumid Prairies
+  # 12  Boreal Cordillera
+  # 13   Pacific Maritime
+  # 14 Montane Cordillera
+
+  # these are the ones that are not
+  # id               name
+  # 8   Mixedwood Plains  - 7  Atlantic Maritime
+  # 11   Taiga Cordillera - 4 taiga plains
+  # 15      Hudson Plains - 6 Boreal Shield West
+  # 16  Taiga Shield East - 5  Taiga Shield West
+  # 17 Boreal Shield East - 6 Boreal Shield West
+  # 18  Semiarid Prairies - 10  Subhumid Prairies
+  ecoNotInT5<- c(8, 11, 15, 16, 17, 18)
+  if (any(eco %in% ecoNotInT5)) {
     EcoBoundaryID <- c(7, 4, 6, 5, 6, 10)
-    ecoReplace <- data.table(ecoInT5, EcoBoundaryID)
+    ecoReplace <- data.table(ecoNotInT5, EcoBoundaryID)
     thisAdmin5.1 <- merge(ecoReplace, thisAdmin5, by = "EcoBoundaryID")
     stable5 <- as.data.table(stable5[stable5$ecozone %in% thisAdmin5.1$EcoBoundaryID, ])
   }
@@ -505,7 +511,7 @@ browser()
   sim$cumPoolsClean <- cumPoolsClean
 
   colsToUseForestType <- c("growth_curve_component_id", "forest_type_id", "gcids")
-  forestType <- gcMeta[, ..colsToUseForestType]
+  forestType <- unique(gcMeta[, ..colsToUseForestType])
   #       #FYI:
   #       # cbmTables$forest_type
   #       # id           name
@@ -515,7 +521,8 @@ browser()
   #       # 4  9 Not Applicable
 
   setkeyv(forestType, "gcids")
-  cumPoolsClean <- merge(cumPoolsClean, forestType, by = "gcids")
+  cumPoolsClean <- merge(cumPoolsClean, forestType, by = "gcids",
+                                     all.x = TRUE, all.y = FALSE)
   swCols <- c("swmerch", "swfol", "swother")
   hwCols <- c("hwmerch", "hwfol", "hwother")
 
