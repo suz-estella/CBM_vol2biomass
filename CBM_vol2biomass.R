@@ -177,48 +177,6 @@ doEvent.CBM_vol2biomass <- function(sim, eventTime, eventType) {
 
       # ! ----- STOP EDITING ----- ! #
     },
-    save = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-
-      # e.g., call your custom functions/methods here
-      # you can define your own methods below this `doEvent` function
-
-      # schedule future event(s)
-
-      # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + P(sim)$.saveInterval, "CBM_vol2biomass", "save")
-
-      # ! ----- STOP EDITING ----- ! #
-    },
-    event1 = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-
-      # e.g., call your custom functions/methods here
-      # you can define your own methods below this `doEvent` function
-
-      # schedule future event(s)
-
-      # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + increment, "CBM_vol2biomass", "templateEvent")
-
-      # ! ----- STOP EDITING ----- ! #
-    },
-    event2 = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-
-      # e.g., call your custom functions/methods here
-      # you can define your own methods below this `doEvent` function
-
-      # schedule future event(s)
-
-      # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + increment, "CBM_vol2biomass", "templateEvent")
-
-      # ! ----- STOP EDITING ----- ! #
-    },
     warning(paste("Undefined event type: \'", current(sim)[1, "eventType", with = FALSE],
       "\' in module \'", current(sim)[1, "moduleName", with = FALSE], "\'",
       sep = ""
@@ -358,7 +316,7 @@ Init <- function(sim) {
   # 16  Taiga Shield East - 5  Taiga Shield West
   # 17 Boreal Shield East - 6 Boreal Shield West
   # 18  Semiarid Prairies - 10  Subhumid Prairies
-  ecoNotInT5<- c(8, 11, 15, 16, 17, 18)
+  ecoNotInT5 <- c(8, 11, 15, 16, 17, 18)
   if (any(eco %in% ecoNotInT5)) {
     EcoBoundaryID <- c(7, 4, 6, 5, 6, 10)
     ecoReplace <- data.table(ecoNotInT5, EcoBoundaryID)
