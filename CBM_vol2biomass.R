@@ -20,7 +20,11 @@ defineModule(sim, list(
     "ggforce", "ggplot2", "ggpubr", "googledrive", "mgcv", "quickPlot", "robustbase"
   ),
   parameters = rbind(
-    # defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
+    defineParameter(
+      "outputFigurePath", "character", NA, NA, NA,
+      paste("Filepath to a directory where output figures will be saved.",
+            "If `NA` (the default), will use 'figures/' inside the module directory.")
+    ),
     defineParameter(
       ".plotInitialTime", "numeric", NA, NA, NA,
       "Describes the simulation time at which the first plot event should occur."
@@ -446,7 +450,15 @@ Init <- function(sim) {
 
   # 3. Plot the curves that are directly out of the Boudewyn-translation
   # Usually, these need to be, at a minimum, smoothed out.
-  figPath <- file.path(modulePath(sim), currentModule(sim), "figures")
+  figPath <- checkPath(if (is.na(P(sim)$outputFigurePath)) {
+      file.path(modulePath(sim), currentModule(sim), "figures")
+  } else {
+      if (basename(P(sim)$outputFigurePath) == currentModule(sim)) {
+        P(sim)$outputFigurePath
+      } else {
+        file.path(P(sim)$outputFigurePath, currentModule(sim))
+      }
+  }, create = TRUE)
 
   # plotting and save the plots of the raw-translation in the sim$ don't really
   # need this b/c the next use of m3ToBiomPlots fnct plots all 6 curves, 3
