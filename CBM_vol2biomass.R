@@ -53,10 +53,14 @@ defineModule(sim, list(
   inputObjects = bindrows(
     # expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     # this are variables in inputed data.tables:SpatialUnitID, EcoBoundaryID, juris_id, ecozone, jur, eco, name, GrowthCurveComponentID, plotsRawCumulativeBiomass, checkInc
-    expectsInput(objectName = "curveID", objectClass = "character",
-                 desc = "Vector of column names that together, uniquely define growth curve id"),
     expectsInput(
-      objectName = "table3", objectClass = "data.frame", desc = "Stem wood biomass model parameters for merchantable-sized trees from Boudewyn et al 2007",
+      objectName = "curveID", objectClass = "character",
+      desc = "Vector of column names that together, uniquely define growth curve id",
+      sourceURL = NA
+    ),
+    expectsInput(
+      objectName = "table3", objectClass = "data.frame",
+      desc = "Stem wood biomass model parameters for merchantable-sized trees from Boudewyn et al 2007",
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv"
     ),
     expectsInput(
@@ -795,7 +799,9 @@ plotFun <- function(sim) {
   ## tables from Boudewyn -- all downloaded from the NFIS site.
   ## however, NFIS changes the tables and seems to forget parameter columns at times.
   if (!suppliedElsewhere("table3", sim)) {
-    sim$table3 <- fread(extractURL("table3"))
+    sim$table3 <- prepInputs(url = extractURL("table3"),
+                             destinationPath = dPath,
+                             fun = "data.table::fread")
 
     ### NOTE: the .csv previously had a column with commas, which adds an extra col
     # these are the columns needed in the functions for calculating biomass
@@ -814,7 +820,9 @@ plotFun <- function(sim) {
   }
 
   if (!suppliedElsewhere("table4", sim)) {
-    sim$table4 <- fread(extractURL("table4"))
+    sim$table4 <- prepInputs(url = extractURL("table4"),
+                             destinationPath = dPath,
+                             fun = "data.table::fread")
 
     ### NOTE: the .csv previously had a column with commas, which adds an extra col
     t4hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
@@ -834,7 +842,9 @@ plotFun <- function(sim) {
   }
 
   if (!suppliedElsewhere("table5", sim)) {
-    sim$table5 <- fread(extractURL("table5"))
+    sim$table5 <- prepInputs(url = extractURL("table5"),
+                             destinationPath = dPath,
+                             fun = "data.table::fread")
 
     ### NOTE: the .csv previously had a column with commas, which adds an extra col
     t5hasToHave <- c("juris_id", "ecozone", "canfi_genus", "genus", "a", "b", "k", "cap", "volm")
@@ -852,7 +862,9 @@ plotFun <- function(sim) {
   }
 
   if (!suppliedElsewhere("table6", sim)) {
-    sim$table6 <- fread(extractURL("table6"), fill = TRUE)
+    sim$table6 <- prepInputs(url = extractURL("table6"),
+                             destinationPath = dPath,
+                             fun = "data.table::fread")
 
     ### NOTE: the .csv previously had a column with commas, which adds an extra col
     t6hasToHave <- c("juris_id", "ecozone", "canfi_species", "a1", "a2", "a3", "b1", "b2", "b3",
@@ -872,7 +884,9 @@ plotFun <- function(sim) {
   }
 
   if (!suppliedElsewhere("table7", sim)) {
-    sim$table7 <- fread(extractURL("table7"))
+    sim$table7 <- prepInputs(url = extractURL("table7"),
+                             destinationPath = dPath,
+                             fun = "data.table::fread")
 
     ### NOTE: the .csv previously had a column with commas, which adds an extra col
     t7hasToHave <- c("juris_id", "ecozone", "canfi_species", "vol_min", "vol_max", "p_sw_low",
