@@ -145,10 +145,12 @@ defineModule(sim, list(
     createsOutput(objectName = "gcMetaAllCols",
                   objectClass = "data.frame",
                   desc = "gcMeta as above plus ecozones"),
-    createsOutput(objectName = "plotsRawCumulativeBiomass", objectClass = "plot", desc = "Plot of cumulative m3/ha curves
-                  translated into tonnes of carbon/ha, per AG pool, prior to any smoothing"),
-    createsOutput(objectName = "checkInc", objectClass = "plot", desc = "Plot of 1/2 of the increment per AG pool,
-                  calculated from the smoothed cumulative tonnes c/ha, derived into increments, per AG pool. "),
+    createsOutput(objectName = "plotsRawCumulativeBiomass", objectClass = "plot",
+                  desc = paste("Plot of cumulative m3/ha curves",
+                               "translated into tonnes of carbon/ha, per AG pool, prior to any smoothing")), ## TODO: not used
+    createsOutput(objectName = "checkInc", objectClass = "plot",
+                  desc = plot("Plot of 1/2 of the increment per AG pool,",
+                              "calculated from the smoothed cumulative tonnes c/ha, derived into increments, per AG pool.")), ## TODO: not used
     createsOutput(objectName = "growth_increments", objectClass = "matrix", desc = "Matrix of the 1/2 increment that will be used to create the gcHash"),
     createsOutput(objectName = "gcHash", objectClass = "environment", desc = "Environment pointing to each gcID, that is itself an environment,
                   pointing to each year of growth for all AG pools.Hashed matrix of the 1/2 growth increment.
