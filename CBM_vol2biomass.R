@@ -140,15 +140,15 @@ defineModule(sim, list(
   ),
   outputObjects = bindrows(
     # createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = "volCurves", objectClass = "plot", desc = "Plot of all the growth curve provided by the user"),
+    createsOutput(objectName = "volCurves", objectClass = "plot", desc = "Plot of all the growth curve provided by the user"), ## TODO: invalid class
     createsOutput(objectName = "gcMetaAllCols",
                   objectClass = "data.frame",
-                  desc = "gcMeta as above plus ecozones"),
-    createsOutput(objectName = "plotsRawCumulativeBiomass", objectClass = "plot",
+                  desc = "`gcMeta` as above plus ecozones"),
+    createsOutput(objectName = "plotsRawCumulativeBiomass", objectClass = "plot", ## TODO invalid class
                   desc = paste("Plot of cumulative m3/ha curves",
                                "translated into tonnes of carbon/ha, per AG pool, prior to any smoothing")), ## TODO: not used
-    createsOutput(objectName = "checkInc", objectClass = "plot",
-                  desc = plot("Plot of 1/2 of the increment per AG pool,",
+    createsOutput(objectName = "checkInc", objectClass = "plot", ## TODO invalid class
+                  desc = paste("Plot of 1/2 of the increment per AG pool,",
                               "calculated from the smoothed cumulative tonnes c/ha, derived into increments, per AG pool.")), ## TODO: not used
     createsOutput(objectName = "growth_increments", objectClass = "matrix", desc = "Matrix of the 1/2 increment that will be used to create the `gcHash`"),
     createsOutput(objectName = "gcHash", objectClass = "environment",
