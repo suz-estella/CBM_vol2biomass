@@ -150,10 +150,11 @@ defineModule(sim, list(
     createsOutput(objectName = "checkInc", objectClass = "plot",
                   desc = plot("Plot of 1/2 of the increment per AG pool,",
                               "calculated from the smoothed cumulative tonnes c/ha, derived into increments, per AG pool.")), ## TODO: not used
-    createsOutput(objectName = "growth_increments", objectClass = "matrix", desc = "Matrix of the 1/2 increment that will be used to create the gcHash"),
-    createsOutput(objectName = "gcHash", objectClass = "environment", desc = "Environment pointing to each gcID, that is itself an environment,
-                  pointing to each year of growth for all AG pools.Hashed matrix of the 1/2 growth increment.
-                  This is used in the c++ functions to increment AG pools two times in an annual event (in the spadesCBMcore.R module.")
+    createsOutput(objectName = "growth_increments", objectClass = "matrix", desc = "Matrix of the 1/2 increment that will be used to create the `gcHash`"),
+    createsOutput(objectName = "gcHash", objectClass = "environment",
+                  desc = paste("Environment pointing to each gcID, that is itself an environment,",
+                               "pointing to each year of growth for all AG pools.Hashed matrix of the 1/2 growth increment.",
+                               "This is used in the c++ functions to increment AG pools two times in an annual event (in the CBM_core module."))
   )
 ))
 
