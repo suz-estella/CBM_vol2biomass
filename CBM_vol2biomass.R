@@ -140,7 +140,6 @@ defineModule(sim, list(
   ),
   outputObjects = bindrows(
     # createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = NA, objectClass = NA, desc = NA),
     createsOutput(objectName = "volCurves", objectClass = "plot", desc = "Plot of all the growth curve provided by the user"),
     createsOutput(objectName = "gcMetaAllCols",
                   objectClass = "data.frame",
