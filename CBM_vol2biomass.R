@@ -533,45 +533,41 @@ Init <- function(sim) {
   setkeyv(forestType, "gcids")
   cumPoolsClean <- merge(cumPoolsClean, forestType, by = "gcids",
                                      all.x = TRUE, all.y = FALSE)
-  swCols <- c("swmerch", "swfol", "swother")
-  hwCols <- c("hwmerch", "hwfol", "hwother")
+  browser()
+  ##### libcbm changes start here - modification 1
 
-  totalIncrementsSmooth <- cumPoolsClean[forest_type_id == 1, (swCols) := list((incMerch), (incFol), (incOther))]
-  totalIncrementsSmooth <- totalIncrementsSmooth[forest_type_id == 3, (hwCols) := list((incMerch), (incFol), (incOther))]
-  totalIncrementsSmooth[is.na(totalIncrementsSmooth)] <- 0
-  outCols <- c("incMerch", "incFol", "incOther", "forest_type_id")
-  incCols <- c(swCols, hwCols)
-  totalIncrementsSmooth[, (outCols) := NULL]
-  increments <- totalIncrementsSmooth[, (incCols) := list(
-    swmerch / 2, swfol / 2,
-    swother / 2, hwmerch / 2, hwfol / 2, hwother / 2
+  outCols <- c("id", "ecozone", "totMerch", "fol", "other")
+  cumPoolsClean[, (outCols) := NULL]
+  keepCols <- c("age", "gcids", "merch_inc", "foliage_inc", "other_inc")
+  incCols <- c("merch_inc", "foliage_inc", "other_inc")
+  setnames(cumPoolsClean,names(cumPoolsClean),
+           keepCols)
+
+
+  half_inc <- cumPoolsClean[, (incCols) := list(
+    merch_inc / 2, foliage_inc / 2, other_inc / 2
   )]
-  setorderv(increments, c("gcids", "age"))
+  setorderv(half_inc, c("gcids", "age"))
 
-  incColKeep <- c("id", "age", incCols)
-  set(increments, NULL, "id", as.numeric(increments[["gcids"]]))
-  set(increments, NULL, setdiff(colnames(increments), incColKeep), NULL)
-  setcolorder(increments, incColKeep)
+  ##TODO rework assertion for modification 1
+  # incColKeep <- c("id", "age", incCols)
+  # set(increments, NULL, "id", as.numeric(increments[["gcids"]]))
+  # set(increments, NULL, setdiff(colnames(increments), incColKeep), NULL)
+  # setcolorder(increments, incColKeep)
+  #
+  # # Assertions
+  # if (isTRUE(P(sim)$doAssertions)) {
+  #   # All should have same min age
+  #   if (length(unique(increments[, min(age), by = "id"]$V1)) != 1)
+  #     stop("All ages should start at the same age for each curveID")
+  #   if (length(unique(increments[, max(age), by = "id"]$V1)) != 1)
+  #     stop("All ages should end at the same age for each curveID")
+  # }
 
-  # Assertions
-  if (isTRUE(P(sim)$doAssertions)) {
-    # All should have same min age
-    if (length(unique(increments[, min(age), by = "id"]$V1)) != 1)
-      stop("All ages should start at the same age for each curveID")
-    if (length(unique(increments[, max(age), by = "id"]$V1)) != 1)
-      stop("All ages should end at the same age for each curveID")
-  }
-
-  sim$growth_increments <- as.matrix(increments)
+  ## replace increments that are NA with 0s
+  half_inc[is.na(half_inc), ] <- 0
+  sim$growth_increments <- half_inc
   # END process growth curves -------------------------------------------------------------------------------
-
-  sim$gcHash <- matrixHash(sim$growth_increments)
-  # create a nested hash (by gcid/by age)
-  ## used in SpinUp function later...
-  for (item in ls(sim$gcHash)) {
-    sim$gcHash[[item]] <- hash(sim$gcHash[[item]])
-  }
-
   # ! ----- STOP EDITING ----- ! #
 
   return(invisible(sim))
