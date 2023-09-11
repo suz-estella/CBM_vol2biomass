@@ -450,7 +450,7 @@ Init <- function(sim) {
 
   otherVars <- cumPools[,.(id = unique(id), ecozone = unique(ecozone)), by = "gcids"]
   add0s <- fiveOf7cols[otherVars, on = "gcids"]
-  cumPoolsRaw <- rbind(cumPools,add0s)
+  cumPoolsRaw <- rbindlist(list(cumPools,add0s), use.names = TRUE)
   set(cumPoolsRaw, NULL, "age", as.numeric(cumPoolsRaw$age))
   setorderv(cumPoolsRaw, c("gcids", "age"))
 
