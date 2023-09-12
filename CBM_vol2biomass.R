@@ -490,11 +490,15 @@ Init <- function(sim) {
   birchGcIds <- c("37", "58")
   birchColsChg <- c("fol", "other")
   if (any(cumPoolsRaw$gcids == 55)) {
-  cumPoolsRaw[gcids %in% birchGcIds, fol := rep(cumPoolsRaw[gcids == 55, fol],2)]
-  cumPoolsRaw[gcids %in% birchGcIds, other := rep(cumPoolsRaw[gcids == 55, other],2)]
+    cumPoolsRaw[gcids %in% birchGcIds, fol := rep(cumPoolsRaw[gcids == 55, fol],2)]
+    cumPoolsRaw[gcids %in% birchGcIds, other := rep(cumPoolsRaw[gcids == 55, other],2)]
   }
 
+  opt <- options(reproducible.useMemoise = FALSE)
+  on.exit(options(opt))
+  # can't memoise
   cumPoolsClean <- Cache(cumPoolsSmooth, cumPoolsRaw)
+  options(opt)
 
   # a[, totMerch := totMerchNew]
   if (!is.na(P(sim)$.plotInitialTime)) {
