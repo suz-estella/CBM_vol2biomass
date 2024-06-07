@@ -16,7 +16,7 @@ defineModule(sim, list(
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
-    "PredictiveEcology/CBMutils@development (>= 0.0.7.9008)",
+    "PredictiveEcology/CBMutils",
     "ggforce", "ggplot2", "ggpubr", "googledrive", "mgcv", "quickPlot", "robustbase"
   ),
   parameters = rbind(
