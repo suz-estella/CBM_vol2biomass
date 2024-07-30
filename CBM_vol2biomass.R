@@ -204,24 +204,25 @@ Init <- function(sim) {
   # user provides userGcM3: incoming cumulative m3/ha
   # plot
   # Test for steps of 1 in the yield curves
-  ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = "GrowthCurveComponentID"]
-  idsWithJumpGT1 <- ageJumps[jumps > 1]$GrowthCurveComponentID
+  ##TODO have to make this more generic. Right now names of columns are fixed.
+  ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = "gcids"]
+  idsWithJumpGT1 <- ageJumps[jumps > 1]$gcids
   if (length(idsWithJumpGT1)) {
     missingAboveMin <- sim$userGcM3[, approx(Age, MerchVolume, xout = setdiff(seq(0, max(Age)), Age)),
-                                    by = "GrowthCurveComponentID"]
+                                    by = "gcids"]
     setnames(missingAboveMin, c("x", "y"), c("Age", "MerchVolume"))
     missingAboveMin <- na.omit(missingAboveMin)
     sim$userGcM3 <- rbindlist(list(sim$userGcM3, missingAboveMin))
-    setorderv(sim$userGcM3, c("GrowthCurveComponentID", "Age"))
+    setorderv(sim$userGcM3, c("gcids", "Age"))
 
     # Assertion
-    ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = "GrowthCurveComponentID"]
-    idsWithJumpGT1 <- ageJumps[jumps > 1]$GrowthCurveComponentID
+    ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = "gcids"]
+    idsWithJumpGT1 <- ageJumps[jumps > 1]$gcids
     if (length(idsWithJumpGT1) > 0)
       stop("There are still yield curves that are not annually resolved")
   }
 
-  sim$volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = GrowthCurveComponentID, colour = GrowthCurveComponentID)) +
+  sim$volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = gcids, colour = gcids)) +
     geom_line() ## TODO: move to plotInit event
   message("User: please look at the curve you provided via sim$volCurves")
   ## not all curves provided are used in the simulation - and ***FOR NOW*** each
@@ -231,14 +232,13 @@ Init <- function(sim) {
   # if(!suppliedElsewhere("level3DT",sim)){
   #   userGcM3 <- sim$userGcM3
   # }else{
-  userGcM3 <- sim$userGcM3
+    userGcM3 <- sim$userGcM3
+    #}
   spu <- unique(sim$spatialUnits)
   eco <- unique(na.omit(sim$ecozones))
 
   thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% spu & sim$cbmAdmin$EcoBoundaryID %in% eco, ]
 
-  ####userGcM3 <- sim$userGcM3[GrowthCurveComponentID %in% unique(sim$gcids), ]
-  # }
 
   # START reducing Biomass model parameter tables -----------------------------------------------
   # reducing the parameter tables to the jurisdiction or ecozone we have in the study area
@@ -343,12 +343,21 @@ Init <- function(sim) {
     sim$table6$ecozone %in% eco, ])
   # END reducing Biomass model parameter tables -----------------------------------------------
 
+  ##NOTES: lines below are old (spadesCBM-C++). We need to find a generic way to
+  ##deal with getting the gcids, associated with sim$canfi_species. Note that
+  ##sim$canfi_species has a coumnthat identifies forest_type_id. forest_type_id
+  ##1 = sw, 2 = mixedwood (that we will currently treat as hw before this
+  ##designation changes the calculation of the fine roots and disturbance
+  ##matrices, and 3 = hw).
+  ##These are the old lines:
   # Read-in user provided meta data for growth curves. This could be a complete
   # data frame with the same columns as gcMetaEg.csv OR is could be only curve
   # id and species. This format is necessary to process the curves and use the
   # resulting increments
   gcMeta <- sim$gcMeta
 
+  ##TODO have to insert somesort of check of gcMeta...##HERE.
+  browser()
   # checking how many columns in gcMeta, if not 6, columns need to be added
   if (!ncol(gcMeta) == 6) {
     # help the user go from their growth curve id and leading species to the six
@@ -600,7 +609,10 @@ plotFun <- function(sim) {
 }
 
 .inputObjects <- function(sim) {
-  browser()
+
+  ##TODO once this is working for spadesCBM-python, all URLs should be fixed in
+  ##here. Defaults for an example of the managed forests of SK will come next.
+
   # Any code written here will be run during the simInit for the purpose of creating
   # any objects required by this module and identified in the inputObjects element of defineModule.
   # This is useful if there is something required before simulation to produce the module
@@ -616,320 +628,323 @@ plotFun <- function(sim) {
   # }
 
   # cacheTags <- c(currentModule(sim), "function:.inputObjects") ## uncomment this if Cache is being used
-  dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
-  message(currentModule(sim), ": using dataPath '", dPath, "'.")
+  # dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
+  # message(currentModule(sim), ": using dataPath '", dPath, "'.")
 
-  if (!suppliedElsewhere("gcids", sim)) {
-    ## this is where the pixelGroups and their spu eco etc.
-    message("No spatial information was provided for the growth curves.
-            The default values (SK simulations) will be used to limit the number of growth curves used.")
-    sim$gcids <- c(
-      52, 52, 58, 52, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55, 58,
-      61, 28, 29, 31, 34, 35, 37, 40, 49, 50, 52, 55, 58, 61, 28, 29,
-      31, 34, 37, 40, 49, 50, 52, 55, 56, 58, 61, 28, 29, 31, 34, 40,
-      49, 50, 52, 55, 58, 61, 28, 34, 49, 52, 55, 40, 28, 31, 34, 40,
-      49, 50, 52, 55, 61, 28, 31, 34, 40, 49, 50, 52, 55, 61, 52, 55,
-      58, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55, 58, 61, 28, 31, 34,
-      37, 40, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37, 40, 49, 50, 52,
-      55, 61, 28, 31, 34, 40, 49, 52, 55, 61, 28, 61, 52, 61, 62, 28,
-      31, 34, 40, 49, 50, 52, 55, 61, 31, 34, 49, 52, 55, 28, 31, 34,
-      40, 49, 50, 52, 55, 58, 61, 62, 28, 29, 31, 34, 40, 49, 50, 52,
-      55, 61, 28, 34, 40, 49, 50, 52, 55, 61, 62, 28, 34, 40, 61, 49,
-      31, 40, 49, 61, 28, 29, 31, 34, 40, 49, 50, 52, 58, 61, 28, 31,
-      34, 40, 49, 50, 52, 55, 61, 49, 52, 55, 28, 31, 34, 40, 49, 50,
-      52, 55, 58, 61, 28, 31, 34, 40, 49, 50, 52, 55, 61, 40, 49, 50,
-      52, 61, 28, 31, 31, 61, 28, 31, 34, 49, 50, 55, 61, 28, 31, 34,
-      49, 61, 28, 34, 52, 61, 31, 49, 52, 55, 55, 40, 28, 49, 28, 31,
-      34, 49, 52, 28, 31, 58, 61, 28, 31, 34, 49, 50, 61, 52, 49, 52,
-      55, 58, 31, 34, 37, 49, 52, 55, 52, 55, 58, 31, 34, 49, 52, 55,
-      56, 58, 31, 34, 49, 52, 55, 56, 58, 61, 49, 52, 55, 52, 55, 28,
-      34, 49, 55, 28, 31, 34, 37, 52, 55, 49, 52, 55, 28, 31, 34, 37,
-      49, 52, 55, 58, 28, 31, 34, 37, 49, 52, 55, 58, 28, 31, 34, 37,
-      49, 52, 55, 34, 37, 50, 52, 52, 28, 31, 34, 37, 52, 55, 28, 31,
-      34, 37, 49, 52, 55, 58, 52, 55, 28, 31, 34, 37, 40, 49, 52, 55,
-      58, 28, 31, 34, 37, 40, 49, 52, 55, 58, 61, 28, 31, 34, 37, 49,
-      52, 55, 58, 28, 31, 34, 37, 52, 55, 31, 52, 55, 31, 28, 31, 34,
-      37, 40, 49, 52, 55, 58, 28, 31, 34, 37, 40, 49, 50, 52, 55, 58,
-      52, 55, 28, 31, 34, 37, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37,
-      40, 49, 50, 52, 55, 58, 28, 31, 34, 37, 40, 49, 50, 52, 55, 58,
-      28, 31, 34, 37, 49, 52, 55, 58, 34, 49, 55, 28, 31, 28, 31, 34,
-      49, 52, 55, 58, 28, 31, 34, 37, 49, 50, 52, 55, 58, 61, 49, 52,
-      28, 31, 34, 37, 40, 49, 50, 52, 55, 58, 28, 29, 31, 34, 35, 37,
-      40, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37, 40, 49, 50, 52, 55,
-      58, 61, 28, 31, 34, 49, 52, 55, 58, 52, 28, 28, 34, 49, 55, 58,
-      61, 28, 34, 37, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37, 40, 49,
-      50, 52, 55, 58, 61, 28, 31, 34, 37, 49, 50, 52, 55, 58, 61, 28,
-      31, 34, 49, 50, 52, 55, 58, 61, 28, 40, 49, 55, 58, 49, 34, 28,
-      31, 34, 49, 50, 52, 55, 58, 28, 31, 34, 37, 40, 49, 50, 52, 55,
-      58, 61, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55, 58, 61, 28, 29,
-      31, 34, 37, 40, 49, 50, 52, 55, 56, 58, 61, 28, 29, 31, 34, 37,
-      40, 49, 50, 52, 55, 58, 61, 28, 29, 31, 34, 40, 49, 50, 52, 55,
-      61, 31, 50, 49, 52, 61, 28, 31, 34, 49, 50, 52, 55, 58, 61, 28,
-      31, 34, 37, 40, 49, 50, 52, 55, 58, 61, 52, 28, 31, 34, 37, 40,
-      49, 50, 52, 55, 58, 61, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55,
-      58, 61, 28, 31, 34, 40, 49, 50, 52, 55, 58, 61, 28, 34, 49, 50,
-      52, 55, 58, 61, 49, 50, 55, 61, 49, 52, 55, 58, 61, 28, 29, 31,
-      34, 40, 49, 50, 52, 55, 58, 61, 28, 29, 31, 34, 37, 40, 49, 50,
-      52, 55, 58, 61
-    )
-  }
-
-  if (!suppliedElsewhere("ecozones", sim)) {
-    message("No spatial information was provided for the growth curves.
-            The default values (SK simulations) will be used to determine which ecozones these curves are in.")
-    sim$ecozones <- c(
-      9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6,
-      6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9,
-      9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 6, 6, 6, 6,
-      6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6,
-      6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6,
-      6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 9, 9, 9,
-      9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 6, 6, 6, 6, 9, 9,
-      9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9,
-      9, 9, 9, 6, 6, 6, 9, 9, 6, 6, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9,
-      9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9,
-      9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 6, 6, 6, 9, 6,
-      6, 6, 9, 9, 9, 9, 6, 6, 6, 9, 9, 6, 6, 9, 9, 6, 9, 9, 9, 9, 6,
-      6, 9, 6, 6, 6, 9, 9, 6, 6, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9,
-      9, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 6, 6, 9, 9,
-      9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9,
-      9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6,
-      9, 9, 9, 6, 6, 9, 9, 9, 6, 6, 6, 6, 9, 9, 6, 6, 6, 6, 9, 9, 9,
-      9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9,
-      9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 6, 9, 9, 6, 6, 6,
-      6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 6, 6,
-      6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6,
-      6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 9, 9, 6, 6, 6,
-      6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6,
-      6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6,
-      6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6,
-      9, 9, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9,
-      9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9,
-      9, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6,
-      9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6,
-      6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9,
-      9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 6, 6, 6, 9, 9,
-      9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6,
-      9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6,
-      6, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-      9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9,
-      9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-      9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9,
-      9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 6, 9, 6, 6, 6, 9, 9, 9, 9, 6, 6,
-      9, 6, 6, 6, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-      9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 6, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9,
-      9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-      9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-      9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9,
-      9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9,
-      6, 6, 6, 6, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9,
-      6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 6, 9, 9,
-      9, 6, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-      9
-    )
-  }
-  if (!suppliedElsewhere("spatialUnits", sim)) {
-    message("No spatial information was provided for the growth curves.
-            The default values (SK simulations) will be used to determine which CBM-spatial units these curves are in.")
-    sim$spatialUnits <- c(
-      28, 28, 28, 28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28,
-      28, 27, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27,
-      27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27,
-      28, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28, 27, 27, 27, 27, 27,
-      28, 28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28,
-      28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27,
-      27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28,
-      28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 27, 28, 28, 28, 28, 27,
-      27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28, 27, 27, 27,
-      27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28,
-      28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 28, 28,
-      27, 27, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27,
-      27, 27, 28, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 28, 28,
-      28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 28, 28,
-      28, 28, 27, 27, 27, 28, 27, 27, 27, 28, 28, 28, 28, 27, 27, 27,
-      28, 28, 27, 27, 28, 28, 27, 28, 28, 28, 28, 27, 27, 28, 27, 27,
-      27, 28, 28, 27, 27, 28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28,
-      28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28,
-      28, 28, 27, 27, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 27,
-      27, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27,
-      28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 27, 27, 27, 27,
-      28, 28, 28, 27, 27, 28, 28, 28, 27, 27, 27, 27, 28, 28, 27, 27,
-      27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28,
-      28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 28,
-      28, 28, 28, 27, 27, 27, 27, 28, 28, 27, 28, 28, 27, 27, 27, 27,
-      27, 27, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28,
-      28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27,
-      27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28,
-      27, 27, 27, 27, 28, 28, 28, 28, 27, 28, 28, 27, 27, 27, 27, 27,
-      28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 28,
-      27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 27,
-      27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28,
-      28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 28, 28, 28,
-      28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28,
-      28, 28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27,
-      27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28, 28, 27, 27,
-      27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28,
-      28, 28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27,
-      27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27,
-      27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28,
-      28, 27, 28, 28, 28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27,
-      27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27,
-      28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28,
-      28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 28, 28,
-      28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27,
-      27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 27, 28, 28,
-      28, 28, 28, 28
-    )
-  }
+  # if (!suppliedElsewhere("gcids", sim)) {
+  #   ## this is where the pixelGroups and their spu eco etc.
+  #   message("No spatial information was provided for the growth curves.
+  #           The default values (SK simulations) will be used to limit the number of growth curves used.")
+  #   sim$gcids <- c(
+  #     52, 52, 58, 52, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55, 58,
+  #     61, 28, 29, 31, 34, 35, 37, 40, 49, 50, 52, 55, 58, 61, 28, 29,
+  #     31, 34, 37, 40, 49, 50, 52, 55, 56, 58, 61, 28, 29, 31, 34, 40,
+  #     49, 50, 52, 55, 58, 61, 28, 34, 49, 52, 55, 40, 28, 31, 34, 40,
+  #     49, 50, 52, 55, 61, 28, 31, 34, 40, 49, 50, 52, 55, 61, 52, 55,
+  #     58, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55, 58, 61, 28, 31, 34,
+  #     37, 40, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37, 40, 49, 50, 52,
+  #     55, 61, 28, 31, 34, 40, 49, 52, 55, 61, 28, 61, 52, 61, 62, 28,
+  #     31, 34, 40, 49, 50, 52, 55, 61, 31, 34, 49, 52, 55, 28, 31, 34,
+  #     40, 49, 50, 52, 55, 58, 61, 62, 28, 29, 31, 34, 40, 49, 50, 52,
+  #     55, 61, 28, 34, 40, 49, 50, 52, 55, 61, 62, 28, 34, 40, 61, 49,
+  #     31, 40, 49, 61, 28, 29, 31, 34, 40, 49, 50, 52, 58, 61, 28, 31,
+  #     34, 40, 49, 50, 52, 55, 61, 49, 52, 55, 28, 31, 34, 40, 49, 50,
+  #     52, 55, 58, 61, 28, 31, 34, 40, 49, 50, 52, 55, 61, 40, 49, 50,
+  #     52, 61, 28, 31, 31, 61, 28, 31, 34, 49, 50, 55, 61, 28, 31, 34,
+  #     49, 61, 28, 34, 52, 61, 31, 49, 52, 55, 55, 40, 28, 49, 28, 31,
+  #     34, 49, 52, 28, 31, 58, 61, 28, 31, 34, 49, 50, 61, 52, 49, 52,
+  #     55, 58, 31, 34, 37, 49, 52, 55, 52, 55, 58, 31, 34, 49, 52, 55,
+  #     56, 58, 31, 34, 49, 52, 55, 56, 58, 61, 49, 52, 55, 52, 55, 28,
+  #     34, 49, 55, 28, 31, 34, 37, 52, 55, 49, 52, 55, 28, 31, 34, 37,
+  #     49, 52, 55, 58, 28, 31, 34, 37, 49, 52, 55, 58, 28, 31, 34, 37,
+  #     49, 52, 55, 34, 37, 50, 52, 52, 28, 31, 34, 37, 52, 55, 28, 31,
+  #     34, 37, 49, 52, 55, 58, 52, 55, 28, 31, 34, 37, 40, 49, 52, 55,
+  #     58, 28, 31, 34, 37, 40, 49, 52, 55, 58, 61, 28, 31, 34, 37, 49,
+  #     52, 55, 58, 28, 31, 34, 37, 52, 55, 31, 52, 55, 31, 28, 31, 34,
+  #     37, 40, 49, 52, 55, 58, 28, 31, 34, 37, 40, 49, 50, 52, 55, 58,
+  #     52, 55, 28, 31, 34, 37, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37,
+  #     40, 49, 50, 52, 55, 58, 28, 31, 34, 37, 40, 49, 50, 52, 55, 58,
+  #     28, 31, 34, 37, 49, 52, 55, 58, 34, 49, 55, 28, 31, 28, 31, 34,
+  #     49, 52, 55, 58, 28, 31, 34, 37, 49, 50, 52, 55, 58, 61, 49, 52,
+  #     28, 31, 34, 37, 40, 49, 50, 52, 55, 58, 28, 29, 31, 34, 35, 37,
+  #     40, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37, 40, 49, 50, 52, 55,
+  #     58, 61, 28, 31, 34, 49, 52, 55, 58, 52, 28, 28, 34, 49, 55, 58,
+  #     61, 28, 34, 37, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37, 40, 49,
+  #     50, 52, 55, 58, 61, 28, 31, 34, 37, 49, 50, 52, 55, 58, 61, 28,
+  #     31, 34, 49, 50, 52, 55, 58, 61, 28, 40, 49, 55, 58, 49, 34, 28,
+  #     31, 34, 49, 50, 52, 55, 58, 28, 31, 34, 37, 40, 49, 50, 52, 55,
+  #     58, 61, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55, 58, 61, 28, 29,
+  #     31, 34, 37, 40, 49, 50, 52, 55, 56, 58, 61, 28, 29, 31, 34, 37,
+  #     40, 49, 50, 52, 55, 58, 61, 28, 29, 31, 34, 40, 49, 50, 52, 55,
+  #     61, 31, 50, 49, 52, 61, 28, 31, 34, 49, 50, 52, 55, 58, 61, 28,
+  #     31, 34, 37, 40, 49, 50, 52, 55, 58, 61, 52, 28, 31, 34, 37, 40,
+  #     49, 50, 52, 55, 58, 61, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55,
+  #     58, 61, 28, 31, 34, 40, 49, 50, 52, 55, 58, 61, 28, 34, 49, 50,
+  #     52, 55, 58, 61, 49, 50, 55, 61, 49, 52, 55, 58, 61, 28, 29, 31,
+  #     34, 40, 49, 50, 52, 55, 58, 61, 28, 29, 31, 34, 37, 40, 49, 50,
+  #     52, 55, 58, 61
+  #   )
+  # }
+  #
+  # if (!suppliedElsewhere("ecozones", sim)) {
+  #   message("No spatial information was provided for the growth curves.
+  #           The default values (SK simulations) will be used to determine which ecozones these curves are in.")
+  #   sim$ecozones <- c(
+  #     9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6,
+  #     6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9,
+  #     9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 6, 6, 6, 6,
+  #     6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6,
+  #     6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6,
+  #     6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 9, 9, 9,
+  #     9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 6, 6, 6, 6, 9, 9,
+  #     9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9,
+  #     9, 9, 9, 6, 6, 6, 9, 9, 6, 6, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9,
+  #     9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9,
+  #     9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 6, 6, 6, 9, 6,
+  #     6, 6, 9, 9, 9, 9, 6, 6, 6, 9, 9, 6, 6, 9, 9, 6, 9, 9, 9, 9, 6,
+  #     6, 9, 6, 6, 6, 9, 9, 6, 6, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9,
+  #     9, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 6, 6, 9, 9,
+  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9,
+  #     9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6,
+  #     9, 9, 9, 6, 6, 9, 9, 9, 6, 6, 6, 6, 9, 9, 6, 6, 6, 6, 9, 9, 9,
+  #     9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9,
+  #     9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 6, 9, 9, 6, 6, 6,
+  #     6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 6, 6,
+  #     6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6,
+  #     6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 9, 9, 6, 6, 6,
+  #     6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6,
+  #     6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6,
+  #     6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6,
+  #     9, 9, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9,
+  #     9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9,
+  #     9, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6,
+  #     9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6,
+  #     6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9,
+  #     9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 6, 6, 6, 9, 9,
+  #     9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6,
+  #     9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6,
+  #     6, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  #     9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9,
+  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9,
+  #     9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 6, 9, 6, 6, 6, 9, 9, 9, 9, 6, 6,
+  #     9, 6, 6, 6, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  #     9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 6, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9,
+  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  #     9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9,
+  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9,
+  #     6, 6, 6, 6, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9,
+  #     6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 6, 9, 9,
+  #     9, 6, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  #     9
+  #   )
+  # }
+  # if (!suppliedElsewhere("spatialUnits", sim)) {
+  #   message("No spatial information was provided for the growth curves.
+  #           The default values (SK simulations) will be used to determine which CBM-spatial units these curves are in.")
+  #   sim$spatialUnits <- c(
+  #     28, 28, 28, 28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28,
+  #     28, 27, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27,
+  #     27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27,
+  #     28, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28, 27, 27, 27, 27, 27,
+  #     28, 28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28,
+  #     28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27,
+  #     27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28,
+  #     28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 27, 28, 28, 28, 28, 27,
+  #     27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28, 27, 27, 27,
+  #     27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28,
+  #     28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 28, 28,
+  #     27, 27, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27,
+  #     27, 27, 28, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 28, 28,
+  #     28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 28, 28,
+  #     28, 28, 27, 27, 27, 28, 27, 27, 27, 28, 28, 28, 28, 27, 27, 27,
+  #     28, 28, 27, 27, 28, 28, 27, 28, 28, 28, 28, 27, 27, 28, 27, 27,
+  #     27, 28, 28, 27, 27, 28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28,
+  #     28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28,
+  #     28, 28, 27, 27, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 27,
+  #     27, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27,
+  #     28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 27, 27, 27, 27,
+  #     28, 28, 28, 27, 27, 28, 28, 28, 27, 27, 27, 27, 28, 28, 27, 27,
+  #     27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28,
+  #     28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 28,
+  #     28, 28, 28, 27, 27, 27, 27, 28, 28, 27, 28, 28, 27, 27, 27, 27,
+  #     27, 27, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28,
+  #     28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27,
+  #     27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28,
+  #     27, 27, 27, 27, 28, 28, 28, 28, 27, 28, 28, 27, 27, 27, 27, 27,
+  #     28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 28,
+  #     27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 27,
+  #     27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28,
+  #     28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 28, 28, 28,
+  #     28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28,
+  #     28, 28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27,
+  #     27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28, 28, 27, 27,
+  #     27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28,
+  #     28, 28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27,
+  #     27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27,
+  #     27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28,
+  #     28, 27, 28, 28, 28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27,
+  #     27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27,
+  #     28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28,
+  #     28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 28, 28,
+  #     28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27,
+  #     27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 27, 28, 28,
+  #     28, 28, 28, 28
+  #   )
+  # }
 
   # userGcM3 and userGcM3File, these files are the m3/ha and age info by growth
   # curve ID, columns should be GrowthCurveComponentID	Age	MerchVolume
   ## TO DO: add a data manipulation to adjust if the m3 are not given on a yearly basis
   if (!suppliedElsewhere("userGcM3", sim)) {
     if (!suppliedElsewhere("userGcM3File", sim)) {
-      sim$userGcM3File <- file.path(dPath, "userGcM3.csv") ## TODO: use prepInputs from url
+      sim$userGcM3File <- file.path(inputPath(sim), "userGcM3.csv") ## TODO: use prepInputs from url
       sim$userGcM3 <- fread(sim$userGcM3File)
+      #   prepInputs(url = "https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true",
+      #                            destinationPath = inputPath(sim),
+      #                            fun = "data.table::fread")
       message(
         "User has not supplied growth curves (m3 by age or the file name for the growth curves). ",
         "The default will be used which is for a region in Saskatchewan."
       )
     }
-    names(sim$userGcM3) <- c("GrowthCurveComponentID", "Age", "MerchVolume")
+    names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
   }
 
   if (!suppliedElsewhere("curveID", sim)) {
-    sim$curveID <- c("growth_curve_component_id")#, "ecozones")
+    sim$curveID <- c("gcids")#, "ecozones")
   }
 
   ## tables from Boudewyn -- all downloaded from the NFIS site.
   ## however, NFIS changes the tables and seems to forget parameter columns at times.
-  if (!suppliedElsewhere("table3", sim)) {
-    sim$table3 <- prepInputs(url = extractURL("table3"),
-                             destinationPath = dPath,
-                             fun = "data.table::fread")
+  # if (!suppliedElsewhere("table3", sim)) {
+  #   sim$table3 <- prepInputs(url = extractURL("table3"),
+  #                            destinationPath = inputPath(sim),
+  #                            fun = "data.table::fread")
+  #
+  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
+  #   # these are the columns needed in the functions for calculating biomass
+  #   t3hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species", "a", "b", "volm")
+  #   if (length(which(colnames(sim$table3) %in% t3hasToHave)) != length(t3hasToHave)) {
+  #     message(
+  #       "The parameter table (appendix2_table3) does not have the expected number of columns. ",
+  #       "This means parameters are missing. The default (older) parameter file will be used instead."
+  #     )
+  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table3.csv"))) {
+  #       drive_download(as_id("1CpgyJ1uJYqoOQiMxmPNZPTDKymfpelQC"),
+  #                      path = file.path(inputPath(sim), "appendix2_table3.csv"))
+  #     }
+      sim$table3 <- fread(file.path(inputPath(sim), "appendix2_table3.csv"))
+  #   }
+  # }
 
-    ### NOTE: the .csv previously had a column with commas, which adds an extra col
-    # these are the columns needed in the functions for calculating biomass
-    t3hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species", "a", "b", "volm")
-    if (length(which(colnames(sim$table3) %in% t3hasToHave)) != length(t3hasToHave)) {
-      message(
-        "The parameter table (appendix2_table3) does not have the expected number of columns. ",
-        "This means parameters are missing. The default (older) parameter file will be used instead."
-      )
-      if (!file.exists(file.path(dPath, "appendix2_table3.csv"))) {
-        drive_download(as_id("1CpgyJ1uJYqoOQiMxmPNZPTDKymfpelQC"),
-                       path = file.path(dPath, "appendix2_table3.csv"))
-      }
-      sim$table3 <- fread(file.path(dPath, "appendix2_table3.csv"))
-    }
-  }
+  # if (!suppliedElsewhere("table4", sim)) {
+  #   sim$table4 <- prepInputs(url = extractURL("table4"),
+  #                            destinationPath = inputPath(sim),
+  #                            fun = "data.table::fread")
+  #
+  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
+  #   t4hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
+  #                     "a", "b", "k", "cap", "volm")
+  #   if (!length(which(colnames(sim$table4) %in% t4hasToHave)) == length(t4hasToHave)) {
+  #     message(
+  #       "The parameter table (appendix2_table4) does not have the expected number of columns. ",
+  #       "This means parameters are missing. The default (older) parameter file will be used instead."
+  #     )
+  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table4.csv"))) {
+  #       drive_download(as_id("1dGLFuysj1SBMzaJgMoLuVH_Hwo2329jb"),
+  #                      path = file.path(inputPath(sim), "appendix2_table4.csv"))
+  #     }
+  #
+      sim$table4 <- fread(file.path(inputPath(sim), "appendix2_table4.csv"))
+  #   }
+  # }
 
-  if (!suppliedElsewhere("table4", sim)) {
-    sim$table4 <- prepInputs(url = extractURL("table4"),
-                             destinationPath = dPath,
-                             fun = "data.table::fread")
+  # if (!suppliedElsewhere("table5", sim)) {
+  #   sim$table5 <- prepInputs(url = extractURL("table5"),
+  #                            destinationPath = inputPath(sim),
+  #                            fun = "data.table::fread")
+  #
+  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
+  #   t5hasToHave <- c("juris_id", "ecozone", "canfi_genus", "genus", "a", "b", "k", "cap", "volm")
+  #   if (!length(which(colnames(sim$table5) %in% t5hasToHave)) == length(t5hasToHave)) {
+  #     message(
+  #       "The parameter table (appendix2_table5) does not have the expected number of columns. ",
+  #       "This means parameters are missing. The default (older) parameter file will be used instead."
+  #     )
+  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table5.csv"))) {
+  #       drive_download(as_id("12WsNPZUdYudazG9bfLqFJC9tqH_ZRhFN"),
+  #                      path = file.path(inputPath(sim), "appendix2_table5.csv"))
+  #     }
+      sim$table5 <- fread(file.path(inputPath(sim), "appendix2_table5.csv"))
+  #   }
+  # }
 
-    ### NOTE: the .csv previously had a column with commas, which adds an extra col
-    t4hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
-                      "a", "b", "k", "cap", "volm")
-    if (!length(which(colnames(sim$table4) %in% t4hasToHave)) == length(t4hasToHave)) {
-      message(
-        "The parameter table (appendix2_table4) does not have the expected number of columns. ",
-        "This means parameters are missing. The default (older) parameter file will be used instead."
-      )
-      if (!file.exists(file.path(dPath, "appendix2_table4.csv"))) {
-        drive_download(as_id("1dGLFuysj1SBMzaJgMoLuVH_Hwo2329jb"),
-                       path = file.path(dPath, "appendix2_table4.csv"))
-      }
+  # if (!suppliedElsewhere("table6", sim)) {
+  #   sim$table6 <- prepInputs(url = extractURL("table6"),
+  #                            destinationPath = inputPath(sim),
+  #                            fun = "data.table::fread")
+  #
+  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
+  #   t6hasToHave <- c("juris_id", "ecozone", "canfi_species", "a1", "a2", "a3", "b1", "b2", "b3",
+  #                    "c1", "c2", "c3" )
+  #   if (!length(which(colnames(sim$table6) %in% t6hasToHave)) == length(t6hasToHave)) {
+  #     message(
+  #       "The parameter table (appendix2_table6) does not have the expected number of columns. ",
+  #       "This means parameters are missing. The default (older) parameter file will be used instead."
+  #     )
+  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table6.csv"))) {
+  #       drive_download(as_id("1FiNyacoLKq96r2tNoXwQZG2YXOl0f6_H"),
+  #                      path = file.path(inputPath(sim), "appendix2_table6.csv"))
+  #     }
+  #
+      sim$table6 <- fread(file.path(inputPath(sim), "appendix2_table6.csv"))
+  #   }
+  # }
 
-      sim$table4 <- fread(file.path(dPath, "appendix2_table4.csv"))
-    }
-  }
+  # if (!suppliedElsewhere("table7", sim)) {
+  #   sim$table7 <- prepInputs(url = extractURL("table7"),
+  #                            destinationPath = inputPath(sim),
+  #                            fun = "data.table::fread")
+  #
+  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
+  #   t7hasToHave <- c("juris_id", "ecozone", "canfi_species", "vol_min", "vol_max", "p_sw_low",
+  #                    "p_sb_low", "p_br_low", "p_fl_low", "p_sw_high", "p_sb_high", "p_br_high",
+  #                    "p_fl_high")
+  #   if (length(which(colnames(sim$table7) %in% t7hasToHave)) != length(t7hasToHave)) {
+  #     message(
+  #       "The parameter table (appendix2_table7) does not have the expected number of columns. ",
+  #       "This means parameters are missing. The default (older) parameter file will be used instead."
+  #     )
+  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table7.csv"))) {
+  #       drive_download(as_id("1ObbZzx_reQUB3repilx_30eCX1vjJOl_"),
+  #                      path = file.path(inputPath(sim), "appendix2_table7.csv"))
+  #     }
+      sim$table7 <- fread(file.path(inputPath(sim), "appendix2_table7.csv"))
+  #   }
+  # }
 
-  if (!suppliedElsewhere("table5", sim)) {
-    sim$table5 <- prepInputs(url = extractURL("table5"),
-                             destinationPath = dPath,
-                             fun = "data.table::fread")
-
-    ### NOTE: the .csv previously had a column with commas, which adds an extra col
-    t5hasToHave <- c("juris_id", "ecozone", "canfi_genus", "genus", "a", "b", "k", "cap", "volm")
-    if (!length(which(colnames(sim$table5) %in% t5hasToHave)) == length(t5hasToHave)) {
-      message(
-        "The parameter table (appendix2_table5) does not have the expected number of columns. ",
-        "This means parameters are missing. The default (older) parameter file will be used instead."
-      )
-      if (!file.exists(file.path(dPath, "appendix2_table5.csv"))) {
-        drive_download(as_id("12WsNPZUdYudazG9bfLqFJC9tqH_ZRhFN"),
-                       path = file.path(dPath, "appendix2_table5.csv"))
-      }
-      sim$table5 <- fread(file.path(dPath, "appendix2_table5.csv"))
-    }
-  }
-
-  if (!suppliedElsewhere("table6", sim)) {
-    sim$table6 <- prepInputs(url = extractURL("table6"),
-                             destinationPath = dPath,
-                             fun = "data.table::fread")
-
-    ### NOTE: the .csv previously had a column with commas, which adds an extra col
-    t6hasToHave <- c("juris_id", "ecozone", "canfi_species", "a1", "a2", "a3", "b1", "b2", "b3",
-                     "c1", "c2", "c3" )
-    if (!length(which(colnames(sim$table6) %in% t6hasToHave)) == length(t6hasToHave)) {
-      message(
-        "The parameter table (appendix2_table6) does not have the expected number of columns. ",
-        "This means parameters are missing. The default (older) parameter file will be used instead."
-      )
-      if (!file.exists(file.path(dPath, "appendix2_table6.csv"))) {
-        drive_download(as_id("1FiNyacoLKq96r2tNoXwQZG2YXOl0f6_H"),
-                       path = file.path(dPath, "appendix2_table6.csv"))
-      }
-
-      sim$table6 <- fread(file.path(dPath, "appendix2_table6.csv"))
-    }
-  }
-
-  if (!suppliedElsewhere("table7", sim)) {
-    sim$table7 <- prepInputs(url = extractURL("table7"),
-                             destinationPath = dPath,
-                             fun = "data.table::fread")
-
-    ### NOTE: the .csv previously had a column with commas, which adds an extra col
-    t7hasToHave <- c("juris_id", "ecozone", "canfi_species", "vol_min", "vol_max", "p_sw_low",
-                     "p_sb_low", "p_br_low", "p_fl_low", "p_sw_high", "p_sb_high", "p_br_high",
-                     "p_fl_high")
-    if (length(which(colnames(sim$table7) %in% t7hasToHave)) != length(t7hasToHave)) {
-      message(
-        "The parameter table (appendix2_table7) does not have the expected number of columns. ",
-        "This means parameters are missing. The default (older) parameter file will be used instead."
-      )
-      if (!file.exists(file.path(dPath, "appendix2_table7.csv"))) {
-        drive_download(as_id("1ObbZzx_reQUB3repilx_30eCX1vjJOl_"),
-                       path = file.path(dPath, "appendix2_table7.csv"))
-      }
-      sim$table7 <- fread(file.path(dPath, "appendix2_table7.csv"))
-    }
-  }
-
-  if (!suppliedElsewhere("gcMeta", sim)) {
-    if (!suppliedElsewhere("gcMetaFile", sim)) {
-      if (!file.exists(file.path(dPath, "gcMetaEg.csv"))) {
-        drive_download(as_id(extractURL("gcMeta")), path = file.path(dPath, "gcMetaEg.csv"))
-      }
-    }
-    sim$gcMeta <- fread(file.path(dPath, "gcMetaEg.csv"))
-  }
+  # if (!suppliedElsewhere("gcMeta", sim)) {
+  #   if (!suppliedElsewhere("gcMetaFile", sim)) {
+  #     if (!file.exists(file.path(inputPath(sim), "gcMetaEg.csv"))) {
+  #       drive_download(as_id(extractURL("gcMeta")), path = file.path(inputPath(sim), "gcMetaEg.csv"))
+  #     }
+  #   }
+    sim$gcMeta <- fread(file.path(inputPath(sim), "gcMetaEg.csv"))
+  # }
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the
   # adminName to avoid confusion.
-  if (!suppliedElsewhere("cbmAdmin", sim)) {
-    if (!suppliedElsewhere("cbmAdminFile", sim)) {
-      if (!file.exists(file.path(dPath, "cbmAdmin.csv"))) {
-        drive_download(as_id(extractURL("cbmAdmin")), path = file.path(dPath, "cbmAdmin.csv"))
-      }
-    }
-    sim$cbmAdmin <- fread(file.path(dPath, "cbmAdmin.csv"))
-  }
+  # if (!suppliedElsewhere("cbmAdmin", sim)) {
+  #   if (!suppliedElsewhere("cbmAdminFile", sim)) {
+  #     if (!file.exists(file.path(inputPath(sim), "cbmAdmin.csv"))) {
+  #       drive_download(as_id(extractURL("cbmAdmin")), path = file.path(inputPath(sim), "cbmAdmin.csv"))
+  #     }
+  #   }
+    sim$cbmAdmin <- fread(file.path(inputPath(sim), "cbmAdmin.csv"))
+  # }
 
   # canfi_species: for the Boudewyn parameters, the species have to be matched
   # with the ones in the Boudewyn tables. The choices HAVE to be one of these.
@@ -942,12 +957,12 @@ plotFun <- function(sim) {
   # 2  2      Mixedwood
   # 3  3       Hardwood
   # 4  9 Not Applicable
-  if (!suppliedElsewhere("canfi_species", sim)) {
-    if (!file.exists(file.path(dPath, "canfi_species.csv"))) {
-      drive_download(as_id(extractURL("canfi_species")), path = file.path(dPath, "canfi_species.csv"))
-    }
-    sim$canfi_species <- fread(file.path(dPath, "canfi_species.csv")) ## TODO: use prepInputs with url
-  }
+  # if (!suppliedElsewhere("canfi_species", sim)) {
+  #   if (!file.exists(file.path(inputPath(sim), "canfi_species.csv"))) {
+  #     drive_download(as_id(extractURL("canfi_species")), path = file.path(inputPath(sim), "canfi_species.csv"))
+  #   }
+    sim$canfi_species <- fread(file.path(inputPath(sim), "canfi_species.csv")) ## TODO: use prepInputs with url
+  # }
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
