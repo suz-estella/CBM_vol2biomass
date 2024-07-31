@@ -16,7 +16,7 @@ defineModule(sim, list(
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
-    "PredictiveEcology/CBMutils",
+    "PredictiveEcology/CBMutils@development (HEAD)",
     "ggforce", "ggplot2", "ggpubr", "googledrive", "mgcv", "quickPlot", "robustbase"
   ),
   parameters = rbind(
@@ -52,7 +52,7 @@ defineModule(sim, list(
   ),
   inputObjects = bindrows(
     # expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
-    # this are variables in inputed data.tables:SpatialUnitID, EcoBoundaryID, juris_id, ecozone, jur, eco, name, GrowthCurveComponentID, plotsRawCumulativeBiomass, checkInc
+    # this are variables in inputed data.tables:SpatialUnitID, EcoBoundaryID, juris_id, ecozone, jur, eco, name, gcids, plotsRawCumulativeBiomass, checkInc
     expectsInput(
       objectName = "curveID", objectClass = "character",
       desc = "Vector of column names that together, uniquely define growth curve id",
@@ -109,14 +109,14 @@ defineModule(sim, list(
     expectsInput(
       objectName = "userGcM3File", objectClass = "character",
       desc = paste("User filename for the files containing:",
-                   "`GrowthCurveComponentID`, `Age`, `MerchVolume`.",
+                   "`gcids`, `Age`, `MerchVolume`.",
                    "Default name `userGcM3`."),
       sourceURL = NA
     ),
     expectsInput(
       objectName = "userGcM3", objectClass = "data.frame",
       desc = paste("User file containing:",
-                   "`GrowthCurveComponentID`, `Age`, `MerchVolume`.",
+                   "`gcids`, `Age`, `MerchVolume`.",
                    "Default name `userGcM3`."),
       sourceURL = "https://drive.google.com/file/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m"
     ),
@@ -352,25 +352,27 @@ Init <- function(sim) {
   ##These are the old lines:
   # Read-in user provided meta data for growth curves. This could be a complete
   # data frame with the same columns as gcMetaEg.csv OR is could be only curve
-  # id and species. This format is necessary to process the curves and use the
-  # resulting increments
+  # id and species.
+  ##TODO start from gcids and species that comes from CBM_dataPrep_XX and match
+  ##to the canfi_species (expectedInputs from URL). Right now just modifying
+  ##gcMeta read-in as the SK example.
   gcMeta <- sim$gcMeta
+  ##TODO this needs to be removed as it is a hard coded modification
+  gcMeta <- gcMeta[,.(growth_curve_id, species, canfi_species, genus, forest_type_id)]
+  setnames(gcMeta, "growth_curve_id", "gcids")
+  ##TODO have to insert some sort of check of gcMeta.
 
-  ##TODO have to insert somesort of check of gcMeta...##HERE.
-  browser()
   # checking how many columns in gcMeta, if not 6, columns need to be added
-  if (!ncol(gcMeta) == 6) {
+  if (!ncol(gcMeta) == 5) {
     # help the user go from their growth curve id and leading species to the six
     # columns: names(gcMeta)
-    # [1] "growth_curve_id"           "growth_curve_component_id"
-    # [3] "species"                   "canfi_species"
-    # [5] "genus"                     "forest_type_id"
+    # [1] "gcids" "species" "canfi_species" "genus" "forest_type_id"
     # the data frame canfi_species.csv (in userData_Defaults_spadesCBM -
     # https://drive.google.com/drive/folders/1OBDTp1v_3b3D3Yvg1pHLiW6A_GRklgpD?usp=sharing)
     # has all the possible options for canfi_species (number), genus (4 letter
     # code) and species (three letter code).
     gcMeta2 <- gcMeta[, .(growth_curve_id, species)]
-    gcMeta2[, growth_curve_component_id := growth_curve_id]
+    gcMeta2[, gcids := growth_curve_id]
     # check if all the species are in the canfi_species table
     ### THIS HAS NOT BEEN TESTED YET
     if (nrow(gcMeta2) == length(which(gcMeta$species %in% sim$canfi_species$name))) {
@@ -388,19 +390,19 @@ Init <- function(sim) {
     ### PUT SOMETHING HERE IF THE SPECIES DONT MATCH...NOT SURE WHAT - ERROR MESSAGE?
   }
 
-  # ### TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
-  # if (!unique(unique(userGcM3$GrowthCurveComponentID) == unique(gcMeta$growth_curve_component_id))) {
+  ##TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
+  # if (!unique(unique(userGcM3$gcids) == unique(gcMeta$gcids))) {
   #   stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
   # }
 
-  # assuming gcMeta has now 6 columns, it needs a 7th: spatial_unit_id. This
+  # assuming gcMeta has now 5 columns, it needs a 7th: spatial_unit_id. This
   # will be used in the convertM3biom() fnct to link to the right ecozone
   # and it only needs the gc we are using in this sim.
-  gcThisSim <- unique(sim$spatialDT[,.(growth_curve_component_id, spatial_unit_id, ecozones)])
+  gcThisSim <- unique(sim$spatialDT[,.(gcids, spatial_unit_id, ecozones)])
   #gcThisSim <- as.data.table(unique(cbind(sim$spatialUnits, sim$gcids)))
-  #names(gcThisSim) <- c("spatial_unit_id", "growth_curve_component_id")
-  setkey(gcThisSim, growth_curve_component_id)
-  setkey(gcMeta, growth_curve_component_id)
+  #names(gcThisSim) <- c("spatial_unit_id", "gcids")
+  setkey(gcThisSim, gcids)
+  setkey(gcMeta, gcids)
   gcMeta <- merge(gcMeta, gcThisSim)
   # curveID are the columns use to make the unique levels in the factor gcids.
   # These factor levels are the link between the pixelGroups and the curve to be
@@ -409,7 +411,7 @@ Init <- function(sim) {
   # to be processed. If sim$level3DT exist, its gcids needs to match these.
 
   curveID <- sim$curveID
-######## THESE WERE MY CHANGES BUT THEY SEEM TO CAUS AN ERROR IN THE SPINUP
+######## THESE WERE MY CHANGES BUT THEY SEEM TO CAUSE AN ERROR IN THE SPINUP
   # gcids <- factor(gcidsCreate(gcMeta[, ..curveID]))
   # setDT(gcMeta)
   # set(gcMeta, NULL, "gcids", gcids)
@@ -434,10 +436,11 @@ Init <- function(sim) {
 
   # 1. Calculate the translation (result is cumPools or "cumulative AGcarbon pools")
 
-  # Matching is 1st on species, then on gcId which gives us location (admin,
+  # Matching is 1st on species, then on gcids which gives us location (admin,
   # spatial unit and ecozone)
   fullSpecies <- unique(gcMeta$species) ## RIA: change this to the canfi_sps or match??
   ####cumPools <- NULL
+
   cumPools <- Cache(cumPoolsCreate, fullSpecies, gcMeta, userGcM3,
                     stable3, stable4, stable5, stable6, stable7, thisAdmin)
   cbmAboveGroundPoolColNames <- "totMerch|fol|other"
@@ -465,16 +468,19 @@ Init <- function(sim) {
 
   # 3. Plot the curves that are directly out of the Boudewyn-translation
   # Usually, these need to be, at a minimum, smoothed out.
-  figPath <- checkPath(if (is.na(P(sim)$outputFigurePath)) {
-      file.path(modulePath(sim), currentModule(sim), "figures")
-  } else {
-      if (basename(P(sim)$outputFigurePath) == currentModule(sim)) {
-        P(sim)$outputFigurePath
-      } else {
-        file.path(P(sim)$outputFigurePath, currentModule(sim))
-      }
-  }, create = TRUE)
+  ##TODO not sure why this is not working - to fix - workarousn is hard coded.
+  # figPath <- checkPath(if (is.na(P(sim)$outputFigurePath)) {
+  #     file.path(modulePath(sim), currentModule(sim), "figures")
+  # } else {
+  #     if (basename(P(sim)$outputFigurePath) == currentModule(sim)) {
+  #       P(sim)$outputFigurePath
+  #     } else {
+  #       file.path(P(sim)$outputFigurePath, currentModule(sim))
+  #     }
+  # }, create = TRUE)
+  figPath <- file.path(modulePath(sim), currentModule(sim), "figures")
 
+  ##TODO either make this work or get rid of it.
   # plotting and save the plots of the raw-translation in the sim$ don't really
   # need this b/c the next use of m3ToBiomPlots fnct plots all 6 curves, 3
   # raw-translation and 3-smoothed curves resulting from the Chapman-Richards
@@ -495,21 +501,39 @@ Init <- function(sim) {
   ## catches in place in the cumSmoothPools failed, a hard fix was needed. The
   ## fol and other columns in gcids 37 and 58, will be replace by the fol and
   ## other of gcids 55.
-
+##TODO replace this hardcoding
   birchGcIds <- c("37", "58")
   birchColsChg <- c("fol", "other")
+  ##TODO this (which curve to replace the wonky ones with) will have to be
+  ##decided by the user after they look at all the curves.
   if (any(cumPoolsRaw$gcids == 55)) {
-    cumPoolsRaw[gcids %in% birchGcIds, fol := rep(cumPoolsRaw[gcids == 55, fol],2)]
-    cumPoolsRaw[gcids %in% birchGcIds, other := rep(cumPoolsRaw[gcids == 55, other],2)]
+    cumPoolsRaw[gcids %in% birchGcIds, fol := rep(cumPoolsRaw[gcids == 55, fol],length(birchGcIds))]
+    cumPoolsRaw[gcids %in% birchGcIds, other := rep(cumPoolsRaw[gcids == 55, other],length(birchGcIds))]
+  }else{##TODO this is very specific to SK not sure how to make this generic
+    meta55 <- sim$gcMeta[growth_curve_id == 55,]
+    meta55[,growth_curve_component_id:=NULL]
+    setnames(meta55, "growth_curve_id", "gcids")
+    meta55$spatial_unit_id <- 28
+    meta55$ecozones <- 9
+    gc55 <- cumPoolsCreate(meta55$species, meta55, userGcM3[gcids == 55,],
+                               stable3, stable4, stable5, stable6, stable7, thisAdmin)
+    ##adding the age 0 and 0 growth
+    gc550s <- data.frame(id = 55, age = 0, totMerch = 0, fol = 0, other = 0, ecozone = 9, gcids = 55)
+    gc55raw <- rbind(gc55, gc550s)
+    setorderv(gc55raw, c("gcids", "age"))
+    cumPoolsRaw[gcids %in% birchGcIds,fol := gc55raw[, fol]]
+    cumPoolsRaw[gcids %in% birchGcIds,other := gc55raw[, other]]
   }
-
+browser()
   opt <- options(reproducible.useMemoise = FALSE)
   on.exit(options(opt))
   # can't memoise
+  ##TODO cache this function once it is fixed
   cumPoolsClean <- Cache(cumPoolsSmooth, cumPoolsRaw)
   options(opt)
 
   # a[, totMerch := totMerchNew]
+  ##HERE - plotting function is not working.
   if (!is.na(P(sim)$.plotInitialTime)) {
     figs <- Cache(m3ToBiomPlots, inc = cumPoolsClean,
                   path = figPath,
@@ -534,7 +558,7 @@ Init <- function(sim) {
                       figPath))
 
   sim$cumPoolsClean <- cumPoolsClean
-
+##TODO Celine - do you need to remove growth_curve_component_id?
   colsToUseForestType <- c("growth_curve_component_id", "forest_type_id", "gcids")
   forestType <- unique(gcMeta[, ..colsToUseForestType])
   #       #FYI:
@@ -795,7 +819,7 @@ plotFun <- function(sim) {
   # }
 
   # userGcM3 and userGcM3File, these files are the m3/ha and age info by growth
-  # curve ID, columns should be GrowthCurveComponentID	Age	MerchVolume
+  # curve ID, columns should be gcids	Age	MerchVolume
   ## TO DO: add a data manipulation to adjust if the m3 are not given on a yearly basis
   if (!suppliedElsewhere("userGcM3", sim)) {
     if (!suppliedElsewhere("userGcM3File", sim)) {
