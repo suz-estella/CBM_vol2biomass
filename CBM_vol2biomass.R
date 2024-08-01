@@ -584,7 +584,9 @@ Init <- function(sim) {
                                      all.x = TRUE, all.y = FALSE)
 
   ## libcbm functions are expecting a full time step increments of carbon (NOT
-  ## halved)
+  ## halved). For the default CBM3-like operations that cbm_exn (libcbm) uses
+  ## the increments you provide are halved internally by this code:
+  ## https://github.com/cat-cfs/libcbm_py/blob/main/libcbm/model/cbm_exn/cbm_exn_annual_process_dynamics.py#L22
 
 
   outCols <- c("id", "ecozone", "totMerch", "fol", "other")
