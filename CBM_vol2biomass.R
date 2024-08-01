@@ -140,21 +140,27 @@ defineModule(sim, list(
   ),
   outputObjects = bindrows(
     # createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = "volCurves", objectClass = "plot", desc = "Plot of all the growth curve provided by the user"), ## TODO: invalid class
+    createsOutput(objectName = "cumPoolsClean", objectClass = "data.table",
+                  desc = "Tonnes of carbon/ha both cumnulative and increments,
+                  for each growth curve id (in this data.table id and gcids are
+                  the same), by age and ecozone"),
+    createsOutput(objectName = "increments", objectClass = "data.table",
+                  desc = "The yearly tonnes of carbon/ha/yr for each growth,
+                  curve id by age and ecozone"),
     createsOutput(objectName = "gcMetaAllCols",
                   objectClass = "data.frame",
                   desc = "`gcMeta` as above plus ecozones"),
     createsOutput(objectName = "plotsRawCumulativeBiomass", objectClass = "plot", ## TODO invalid class
                   desc = paste("Plot of cumulative m3/ha curves",
-                               "translated into tonnes of carbon/ha, per AG pool, prior to any smoothing")), ## TODO: not used
-    createsOutput(objectName = "checkInc", objectClass = "plot", ## TODO invalid class
-                  desc = paste("Plot of 1/2 of the increment per AG pool,",
-                              "calculated from the smoothed cumulative tonnes c/ha, derived into increments, per AG pool.")), ## TODO: not used
+                               "translated into tonnes of carbon/ha, per AG pool,
+                               prior to any smoothing")), ## TODO: not used
     createsOutput(objectName = "growth_increments", objectClass = "matrix", desc = "Matrix of the 1/2 increment that will be used to create the `gcHash`"),
     createsOutput(objectName = "gcHash", objectClass = "environment",
                   desc = paste("Environment pointing to each gcID, that is itself an environment,",
                                "pointing to each year of growth for all AG pools.Hashed matrix of the 1/2 growth increment.",
-                               "This is used in the c++ functions to increment AG pools two times in an annual event (in the CBM_core module."))
+                               "This is used in the c++ functions to increment AG pools two times in an annual event (in the CBM_core module.")),
+    createsOutput(objectName = "volCurves", objectClass = "plot", desc = "Plot of all the growth curve provided by the user")
+
   )
 ))
 
@@ -524,21 +530,23 @@ Init <- function(sim) {
     cumPoolsRaw[gcids %in% birchGcIds,fol := gc55raw[, fol]]
     cumPoolsRaw[gcids %in% birchGcIds,other := gc55raw[, other]]
   }
-browser()
-  opt <- options(reproducible.useMemoise = FALSE)
-  on.exit(options(opt))
-  # can't memoise
-  ##TODO cache this function once it is fixed
-  cumPoolsClean <- Cache(cumPoolsSmooth, cumPoolsRaw)
-  options(opt)
+
+  cumPoolsClean <- cumPoolsSmooth(cumPoolsRaw) ##TODO Caching seems to produce an error.
+
+
 
   # a[, totMerch := totMerchNew]
-  ##HERE - plotting function is not working.
-  if (!is.na(P(sim)$.plotInitialTime)) {
-    figs <- Cache(m3ToBiomPlots, inc = cumPoolsClean,
+  ##TODO - Forcing the plotting to happen (this can be reverted to
+  ##P(sim)$.plotInitialTime) once it is working properly)
+  #if (!is.na(P(sim)$.plotInitialTime)) {
+    figs <- m3ToBiomPlots(inc = cumPoolsClean,
                   path = figPath,
                   filenameBase = "cumPools_smoothed_postChapmanRichards")
-  }
+    ##TODO |< Cache() seems to cause an error
+    #Error in obj_size_(dots, env, size_node(), size_vector()) :
+    #bad binding access.
+  #}
+  ## keeping the new curves - at this point they are still cumulative
   set(cumPoolsClean, NULL, colNames, NULL)
   colNamesNew <- grep(cbmAboveGroundPoolColNames, colnames(cumPoolsClean), value = TRUE)
   setnames(cumPoolsClean, old = colNamesNew, new = colNames)
@@ -548,18 +556,20 @@ browser()
   cumPoolsClean[, (incCols) := lapply(.SD, function(x) c(NA, diff(x))), .SDcols = colNames,
                 by = eval("gcids")]
   colsToUse33 <- c("age", "gcids", incCols)
-  if (!is.na(P(sim)$.plotInitialTime)) {
-    rawIncPlots <- Cache(m3ToBiomPlots, inc = cumPoolsClean[, ..colsToUse33],
+  ##TODO - Forcing the plotting to happen (this can be reverted to
+  ##P(sim)$.plotInitialTime and Cached) once it is working properly)
+#  if (!is.na(P(sim)$.plotInitialTime)) {
+    rawIncPlots <- m3ToBiomPlots(inc = cumPoolsClean[, ..colsToUse33],
                          path = figPath,
                          title = "Smoothed increments merch fol other by gc id",
-                         filenameBase = "Increments")
-  }
+                         filenameBase = "Increments") ##TODO caching results in error
+#  }
   message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
                       figPath))
 
   sim$cumPoolsClean <- cumPoolsClean
-##TODO Celine - do you need to remove growth_curve_component_id?
-  colsToUseForestType <- c("growth_curve_component_id", "forest_type_id", "gcids")
+
+  colsToUseForestType <- c("forest_type_id", "gcids")
   forestType <- unique(gcMeta[, ..colsToUseForestType])
   #       #FYI:
   #       # cbmTables$forest_type
@@ -572,21 +582,23 @@ browser()
   setkeyv(forestType, "gcids")
   cumPoolsClean <- merge(cumPoolsClean, forestType, by = "gcids",
                                      all.x = TRUE, all.y = FALSE)
-  browser()
-  ##### libcbm changes start here - modification 1
+
+  ## libcbm functions are expecting a full time step increments of carbon (NOT
+  ## halved)
+
 
   outCols <- c("id", "ecozone", "totMerch", "fol", "other")
   cumPoolsClean[, (outCols) := NULL]
-  keepCols <- c("age", "gcids", "merch_inc", "foliage_inc", "other_inc")
+  keepCols <- c("gcids", "age", "merch_inc", "foliage_inc", "other_inc", "forest_type_id")
   incCols <- c("merch_inc", "foliage_inc", "other_inc")
   setnames(cumPoolsClean,names(cumPoolsClean),
            keepCols)
 
 
-  half_inc <- cumPoolsClean[, (incCols) := list(
-    merch_inc / 2, foliage_inc / 2, other_inc / 2
+  increments <- cumPoolsClean[, (incCols) := list(
+    merch_inc, foliage_inc, other_inc
   )]
-  setorderv(half_inc, c("gcids", "age"))
+  setorderv(increments, c("gcids", "age"))
 
   ##TODO rework assertion for modification 1
   # incColKeep <- c("id", "age", incCols)
@@ -604,8 +616,8 @@ browser()
   # }
 
   ## replace increments that are NA with 0s
-  half_inc[is.na(half_inc), ] <- 0
-  sim$growth_increments <- half_inc
+  increments[is.na(increments), ] <- 0
+  sim$growth_increments <- increments
   # END process growth curves -------------------------------------------------------------------------------
   # ! ----- STOP EDITING ----- ! #
 
