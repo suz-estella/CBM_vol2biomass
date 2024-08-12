@@ -211,6 +211,7 @@ Init <- function(sim) {
   # plot
   # Test for steps of 1 in the yield curves
   ##TODO have to make this more generic. Right now names of columns are fixed.
+
   ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = "gcids"]
   idsWithJumpGT1 <- ageJumps[jumps > 1]$gcids
   if (length(idsWithJumpGT1)) {
@@ -835,20 +836,22 @@ plotFun <- function(sim) {
   # userGcM3 and userGcM3File, these files are the m3/ha and age info by growth
   # curve ID, columns should be gcids	Age	MerchVolume
   ## TO DO: add a data manipulation to adjust if the m3 are not given on a yearly basis
-  if (!suppliedElsewhere("userGcM3", sim)) {
-    if (!suppliedElsewhere("userGcM3File", sim)) {
-      sim$userGcM3File <- file.path(inputPath(sim), "userGcM3.csv") ## TODO: use prepInputs from url
-      sim$userGcM3 <- fread(sim$userGcM3File)
-      #   prepInputs(url = "https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true",
-      #                            destinationPath = inputPath(sim),
-      #                            fun = "data.table::fread")
-      message(
-        "User has not supplied growth curves (m3 by age or the file name for the growth curves). ",
-        "The default will be used which is for a region in Saskatchewan."
-      )
-    }
-    names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
-  }
+  # if (!suppliedElsewhere("userGcM3", sim)) {
+  #   if (!suppliedElsewhere("userGcM3File", sim)) {
+  #     sim$userGcM3File <- file.path(inputPath(sim), "userGcM3.csv") ## TODO: use prepInputs from url
+  #     sim$userGcM3 <- fread(sim$userGcM3File)
+  #     #   prepInputs(url = "https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true",
+  #     #                            destinationPath = inputPath(sim),
+  #     #                            fun = "data.table::fread")
+  #     message(
+  #       "User has not supplied growth curves (m3 by age or the file name for the growth curves). ",
+  #       "The default will be used which is for a region in Saskatchewan."
+  #     )
+  #   }
+  #   names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
+  # }
+  sim$userGcM3 <- fread(file.path(inputPath(sim), "userGcM3.csv"))
+  names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
 
   if (!suppliedElsewhere("curveID", sim)) {
     sim$curveID <- c("gcids")#, "ecozones")
@@ -873,7 +876,9 @@ plotFun <- function(sim) {
   #       drive_download(as_id("1CpgyJ1uJYqoOQiMxmPNZPTDKymfpelQC"),
   #                      path = file.path(inputPath(sim), "appendix2_table3.csv"))
   #     }
-      sim$table3 <- fread(file.path(inputPath(sim), "appendix2_table3.csv"))
+      sim$table3 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv",
+                               destinationPath = "inputs",
+                               fun = fread)
   #   }
   # }
 
@@ -895,7 +900,9 @@ plotFun <- function(sim) {
   #                      path = file.path(inputPath(sim), "appendix2_table4.csv"))
   #     }
   #
-      sim$table4 <- fread(file.path(inputPath(sim), "appendix2_table4.csv"))
+      sim$table4 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv",
+                               destinationPath = "inputs",
+                               fun = fread)
   #   }
   # }
 
@@ -915,7 +922,9 @@ plotFun <- function(sim) {
   #       drive_download(as_id("12WsNPZUdYudazG9bfLqFJC9tqH_ZRhFN"),
   #                      path = file.path(inputPath(sim), "appendix2_table5.csv"))
   #     }
-      sim$table5 <- fread(file.path(inputPath(sim), "appendix2_table5.csv"))
+      sim$table5 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv",
+                               destinationPath = "inputs",
+                               fun = fread)
   #   }
   # }
 
@@ -937,7 +946,9 @@ plotFun <- function(sim) {
   #                      path = file.path(inputPath(sim), "appendix2_table6.csv"))
   #     }
   #
-      sim$table6 <- fread(file.path(inputPath(sim), "appendix2_table6.csv"))
+      sim$table6 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv",
+                               destinationPath = "inputs",
+                               fun = fread)
   #   }
   # }
 
@@ -959,7 +970,9 @@ plotFun <- function(sim) {
   #       drive_download(as_id("1ObbZzx_reQUB3repilx_30eCX1vjJOl_"),
   #                      path = file.path(inputPath(sim), "appendix2_table7.csv"))
   #     }
-      sim$table7 <- fread(file.path(inputPath(sim), "appendix2_table7.csv"))
+      sim$table7 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv",
+                               destinationPath = "inputs",
+                               fun = fread)
   #   }
   # }
 
@@ -969,7 +982,9 @@ plotFun <- function(sim) {
   #       drive_download(as_id(extractURL("gcMeta")), path = file.path(inputPath(sim), "gcMetaEg.csv"))
   #     }
   #   }
-    sim$gcMeta <- fread(file.path(inputPath(sim), "gcMetaEg.csv"))
+    sim$gcMeta <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/",
+                             destinationPath = "inputs",
+                             fun = fread)
   # }
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
@@ -981,7 +996,9 @@ plotFun <- function(sim) {
   #       drive_download(as_id(extractURL("cbmAdmin")), path = file.path(inputPath(sim), "cbmAdmin.csv"))
   #     }
   #   }
-    sim$cbmAdmin <- fread(file.path(inputPath(sim), "cbmAdmin.csv"))
+    sim$cbmAdmin <- prepInputs(url = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz",
+                               destinationPath = "inputs",
+                               fun = fread)
   # }
 
   # canfi_species: for the Boudewyn parameters, the species have to be matched
@@ -999,7 +1016,9 @@ plotFun <- function(sim) {
   #   if (!file.exists(file.path(inputPath(sim), "canfi_species.csv"))) {
   #     drive_download(as_id(extractURL("canfi_species")), path = file.path(inputPath(sim), "canfi_species.csv"))
   #   }
-    sim$canfi_species <- fread(file.path(inputPath(sim), "canfi_species.csv")) ## TODO: use prepInputs with url
+    sim$canfi_species <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/",
+                                    destinationPath = "inputs",
+                                    fun = fread) ## TODO: use prepInputs with url
   # }
 
   # ! ----- STOP EDITING ----- ! #
