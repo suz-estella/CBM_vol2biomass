@@ -983,6 +983,7 @@ plotFun <- function(sim) {
   #     }
   #   }
     sim$gcMeta <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/",
+                             targetFile = "gcMetaEg.csv",
                              destinationPath = "inputs",
                              fun = fread)
   # }
@@ -997,6 +998,7 @@ plotFun <- function(sim) {
   #     }
   #   }
     sim$cbmAdmin <- prepInputs(url = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz",
+                               targetFile = "cbmAdmin.csv",
                                destinationPath = "inputs",
                                fun = fread)
   # }
@@ -1017,6 +1019,7 @@ plotFun <- function(sim) {
   #     drive_download(as_id(extractURL("canfi_species")), path = file.path(inputPath(sim), "canfi_species.csv"))
   #   }
     sim$canfi_species <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/",
+                                    targetFile = "canfi_species.csv",
                                     destinationPath = "inputs",
                                     fun = fread) ## TODO: use prepInputs with url
   # }
