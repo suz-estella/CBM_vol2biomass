@@ -850,7 +850,10 @@ plotFun <- function(sim) {
   #   }
   #   names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
   # }
-  sim$userGcM3 <- fread(file.path(inputPath(sim), "userGcM3.csv"))
+  sim$userGcM3 <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true",
+                            destinationPath = inputPath(sim),
+                            targetFile = "userGcM3.csv",
+                            fun = "data.table::fread")
   names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
 
   if (!suppliedElsewhere("curveID", sim)) {
