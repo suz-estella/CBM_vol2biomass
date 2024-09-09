@@ -621,9 +621,9 @@ Init <- function(sim) {
   ## replace increments that are NA with 0s
   increments[is.na(increments), ] <- 0
   sim$growth_increments <- increments
-  # gcid_is_sw_hw <- sim$growth_increments[, .(is_sw = any(forest_type_id == 1)), .(gcids)] ##TODO: is_sw already exists in sim$forestTypeId created in defaults
-  # gcid_is_sw_hw$gcid <- factor(gcid_is_sw_hw$gcids, levels(sim$level3DT$gcids))
-  # sim$gcid_is_sw_hw <- gcid_is_sw_hw
+  gcid_is_sw_hw <- increments[, .(is_sw = any(forest_type_id == 1)), .(gcids)] ##TODO: is_sw already exists in sim$forestTypeId created in defaults
+  gcid_is_sw_hw$gcid <- factor(gcid_is_sw_hw$gcids, levels(sim$level3DT$gcids))
+  sim$gcid_is_sw_hw <- gcid_is_sw_hw
 
   # END process growth curves -------------------------------------------------------------------------------
   # ! ----- STOP EDITING ----- ! #
