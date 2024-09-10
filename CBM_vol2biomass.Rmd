@@ -17,27 +17,36 @@ editor_options:
 
 ## List of input objects
 
-| Name          | Class | Description | Source                                                                                                                                    |
-|------------------|------------------|------------------|------------------|
-| userGCM3      |       |             | <https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true> |
-| curveID       |       |             |                                                                                                                                           |
-| gcMeta        |       |             | <https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/>                                                               |
-| spatialID     |       |             |                                                                                                                                           |
-| canfi_species |       |             | <https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/>                                                               |
-| ecozones      |       |             |                                                                                                                                           |
-| table 3       |       |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv>                                                                      |
-| table 4       |       |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv>                                                                      |
-| table 5       |       |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv>                                                                      |
-| table 6       |       |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv>                                                                      |
-| table 7       |       |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv>                                                                      |
-| cbmAdmin      |       |             | <https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz>                                                                       |
+| Name          | Class      | Description | Source                                                                                                                                    |
+|------------|------------|-----------------------|--------------------------|
+| userGCM3      | Data table |             | <https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true> |
+| curveID       | Character  |             |                                                                                                                                           |
+| gcMeta        | Data table |             | <https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/>                                                               |
+| spatialID     | Data table |             |                                                                                                                                           |
+| canfi_species | Data table |             | <https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/>                                                               |
+| ecozones      | Numeric    |             |                                                                                                                                           |
+| table 3       | Data table |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv>                                                                      |
+| table 4       | Data table |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv>                                                                      |
+| table 5       | Data table |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv>                                                                      |
+| table 6       | Data table |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv>                                                                      |
+| table 7       | Data table |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv>                                                                      |
+| cbmAdmin      | Data table |             | <https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz>                                                                       |
 
 ## List of output objects
 
-| Name | Class | Description |
-|------|-------|-------------|
+| Name              | Class      | Description |
+|-------------------|------------|-------------|
+| cumPoolsClean     | Data table |             |
+| growth_increments | Data table |             |
+| gcMetaAllCols     | Data table |             |
+| volCurves         | gg (list?) |             |
 
 ## Module flow (rename this section later)
+1. 
+2.
+3.
+4.
+
 
 ## OLD VERSION
 
