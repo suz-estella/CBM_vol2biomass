@@ -567,9 +567,7 @@ Init <- function(sim) {
 #  }
   message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
                       figPath))
-
   sim$cumPoolsClean <- cumPoolsClean
-
   colsToUseForestType <- c("forest_type_id", "gcids")
   forestType <- unique(gcMeta[, ..colsToUseForestType])
   #       #FYI:
@@ -589,15 +587,12 @@ Init <- function(sim) {
   ## the increments you provide are halved internally by this code:
   ## https://github.com/cat-cfs/libcbm_py/blob/main/libcbm/model/cbm_exn/cbm_exn_annual_process_dynamics.py#L22
 
-
   outCols <- c("id", "ecozone", "totMerch", "fol", "other")
   cumPoolsClean[, (outCols) := NULL]
   keepCols <- c("gcids", "age", "merch_inc", "foliage_inc", "other_inc", "forest_type_id")
   incCols <- c("merch_inc", "foliage_inc", "other_inc")
   setnames(cumPoolsClean,names(cumPoolsClean),
            keepCols)
-
-
   increments <- cumPoolsClean[, (incCols) := list(
     merch_inc, foliage_inc, other_inc
   )]
@@ -617,13 +612,13 @@ Init <- function(sim) {
   #   if (length(unique(increments[, max(age), by = "id"]$V1)) != 1)
   #     stop("All ages should end at the same age for each curveID")
   # }
-
   ## replace increments that are NA with 0s
+
   increments[is.na(increments), ] <- 0
   sim$growth_increments <- increments
-  gcid_is_sw_hw <- increments[, .(is_sw = any(forest_type_id == 1)), .(gcids)] ##TODO: is_sw already exists in sim$forestTypeId created in defaults
-  gcid_is_sw_hw$gcid <- factor(gcid_is_sw_hw$gcids, levels(sim$level3DT$gcids))
-  sim$gcid_is_sw_hw <- gcid_is_sw_hw
+  # gcid_is_sw_hw <- increments[, .(is_sw = any(forest_type_id == 1)), .(gcids)]
+  # gcid_is_sw_hw$gcid <- factor(gcid_is_sw_hw$gcids, levels(sim$level3DT$gcids))
+  # sim$gcid_is_sw_hw <- gcid_is_sw_hw
 
   # END process growth curves -------------------------------------------------------------------------------
   # ! ----- STOP EDITING ----- ! #
@@ -1028,7 +1023,7 @@ plotFun <- function(sim) {
     sim$canfi_species <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/",
                                     targetFile = "canfi_species.csv",
                                     destinationPath = "inputs",
-                                    fun = fread) ## TODO: use prepInputs with url
+                                    fun = fread)
   # }
 
   # ! ----- STOP EDITING ----- ! #
