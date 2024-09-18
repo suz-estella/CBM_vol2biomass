@@ -532,7 +532,7 @@ Init <- function(sim) {
   }
 
   cumPoolsClean <- cumPoolsSmooth(cumPoolsRaw) ##TODO Caching seems to produce an error.
-
+  #Note: this will produce a warning if one of the curve smoothing efforts doesn't converge
 
 
   # a[, totMerch := totMerchNew]
@@ -546,6 +546,8 @@ Init <- function(sim) {
     #Error in obj_size_(dots, env, size_node(), size_vector()) :
     #bad binding access.
   #}
+
+
   ## keeping the new curves - at this point they are still cumulative
   set(cumPoolsClean, NULL, colNames, NULL)
   colNamesNew <- grep(cbmAboveGroundPoolColNames, colnames(cumPoolsClean), value = TRUE)
