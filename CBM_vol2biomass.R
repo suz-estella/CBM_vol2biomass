@@ -59,6 +59,10 @@ defineModule(sim, list(
       sourceURL = NA
     ),
     expectsInput(
+      objectName = "table3URL", objectClass = "character",
+      desc = "URL for table 3"
+    ),
+    expectsInput(
       objectName = "table3", objectClass = "data.frame",
       desc = "Stem wood biomass model parameters for merchantable-sized trees from Boudewyn et al 2007",
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv"
@@ -265,6 +269,7 @@ Init <- function(sim) {
 
   # "s" table for small table3, 4, 5, 6, 7 - tables limited to the targeted
   # ecozones and jurisdictions
+  # browser()
   stable3 <- as.data.table(sim$table3[sim$table3$juris_id %in% thisAdmin$abreviation &
     sim$table3$ecozone %in% eco, ])
   stable4 <- as.data.table(sim$table4[sim$table4$juris_id %in% thisAdmin$abreviation &
@@ -857,10 +862,15 @@ plotFun <- function(sim) {
 
   ## tables from Boudewyn -- all downloaded from the NFIS site.
   ## however, NFIS changes the tables and seems to forget parameter columns at times.
+  # browser()
   if (!suppliedElsewhere("table3", sim)) {
+    if (!suppliedElsewhere(table3URL, sim)) {
+      sim$table3URL <- extractURL("table3")
+    }
     sim$table3 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv",
                              destinationPath = "inputs",
                              fun = fread)
+
   #
   #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
   #   # these are the columns needed in the functions for calculating biomass
@@ -965,14 +975,14 @@ plotFun <- function(sim) {
   # }
 
   if (!suppliedElsewhere("gcMeta", sim)) {
-    if (!suppliedElsewhere("gcMetaFile", sim)) {
-      if (!file.exists(file.path(inputPath(sim), "gcMetaEg.csv"))) {
+    # if (!suppliedElsewhere("gcMetaFile", sim)) {
+      # if (!file.exists(file.path(inputPath(sim), "gcMetaEg.csv"))) {
         sim$gcMeta <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/",
                                  targetFile = "gcMetaEg.csv",
                                  destinationPath = "inputs",
                                  fun = fread)
-      }
-    }
+      # }
+    # }
 
   }
 
@@ -980,14 +990,14 @@ plotFun <- function(sim) {
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the
   # adminName to avoid confusion.
   if (!suppliedElsewhere("cbmAdmin", sim)) {
-    if (!suppliedElsewhere("cbmAdminFile", sim)) {
-      if (!file.exists(file.path(inputPath(sim), "cbmAdmin.csv"))) {
+    # if (!suppliedElsewhere("cbmAdminFile", sim)) {
+      # if (!file.exists(file.path(inputPath(sim), "cbmAdmin.csv"))) {
         sim$cbmAdmin <- prepInputs(url = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz",
                                    targetFile = "cbmAdmin.csv",
                                    destinationPath = "inputs",
                                    fun = fread)
-      }
-    }
+      # }
+    # }
 
   }
 
@@ -1003,12 +1013,12 @@ plotFun <- function(sim) {
   # 3  3       Hardwood
   # 4  9 Not Applicable
   if (!suppliedElsewhere("canfi_species", sim)) {
-    if (!file.exists(file.path(inputPath(sim), "canfi_species.csv"))) {
+    # if (!file.exists(file.path(inputPath(sim), "canfi_species.csv"))) {
       sim$canfi_species <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/",
                                       targetFile = "canfi_species.csv",
                                       destinationPath = "inputs",
                                       fun = fread)
-    }
+    # }
 
   }
 
