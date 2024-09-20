@@ -297,19 +297,18 @@ Init <- function(sim) {
 
   # "s" table for small table3, 4, 5, 6, 7 - tables limited to the targeted
   # ecozones and jurisdictions
-  # browser()
   stable3 <- as.data.table(sim$table3[sim$table3$juris_id %in% thisAdmin$abreviation &
     sim$table3$ecozone %in% eco, ])
   stable4 <- as.data.table(sim$table4[sim$table4$juris_id %in% thisAdmin$abreviation &
     sim$table4$ecozone %in% eco, ])
-  # table5 is different since there was not have enough data to fit models for
+
+   # table5 is different since there was not have enough data to fit models for
   # all provinces.
   # unique(sim$table5$juris_id)
   # [1] "AB" "BC" "NB" "NL" "NT"
   # Here we are hard-coding the closest equivalent province to
   # have a complete set.
   # This first If-statement is to catch the "no-province" match
-
   stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin$abreviation, ])
   ## DANGER HARD CODED: if NFIS changes table 5, this will no longer be valid
   # juris_id: there are only 5/13 possible
@@ -451,7 +450,7 @@ Init <- function(sim) {
   # to be processed. If sim$level3DT exist, its gcids needs to match these.
 
   curveID <- sim$curveID
-######## THESE WERE MY CHANGES BUT THEY SEEM TO CAUSE AN ERROR IN THE SPINUP
+######## THESE WERE MY (Celine) CHANGES BUT THEY SEEM TO CAUSE AN ERROR IN THE SPINUP
   # gcids <- factor(gcidsCreate(gcMeta[, ..curveID]))
   # setDT(gcMeta)
   # set(gcMeta, NULL, "gcids", gcids)
@@ -681,9 +680,6 @@ plotFun <- function(sim) {
 
 .inputObjects <- function(sim) {
 
-  ##TODO once this is working for spadesCBM-python, all URLs should be fixed in
-  ##here. Defaults for an example of the managed forests of SK will come next.
-
   # Any code written here will be run during the simInit for the purpose of creating
   # any objects required by this module and identified in the inputObjects element of defineModule.
   # This is useful if there is something required before simulation to produce the module
@@ -890,7 +886,6 @@ plotFun <- function(sim) {
 
   ## tables from Boudewyn -- all downloaded from the NFIS site.
   ## however, NFIS changes the tables and seems to forget parameter columns at times.
-  # browser()
   if (!suppliedElsewhere("table3", sim)) {
     if (!suppliedElsewhere("table3URL", sim)) {
       sim$table3URL <- extractURL("table3")
@@ -908,13 +903,7 @@ plotFun <- function(sim) {
   #       "The parameter table (appendix2_table3) does not have the expected number of columns. ",
   #       "This means parameters are missing. The default (older) parameter file will be used instead."
   #     )
-  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table3.csv"))) {
-  #       drive_download(as_id("1CpgyJ1uJYqoOQiMxmPNZPTDKymfpelQC"),
-  #                      path = file.path(inputPath(sim), "appendix2_table3.csv"))
       }
-
-  #   }
-  # }
 
   if (!suppliedElsewhere("table4", sim)) {
     if (!suppliedElsewhere("table4URL", sim)) {
@@ -932,14 +921,8 @@ plotFun <- function(sim) {
   #       "The parameter table (appendix2_table4) does not have the expected number of columns. ",
   #       "This means parameters are missing. The default (older) parameter file will be used instead."
   #     )
-  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table4.csv"))) {
-  #       drive_download(as_id("1dGLFuysj1SBMzaJgMoLuVH_Hwo2329jb"),
-  #                      path = file.path(inputPath(sim), "appendix2_table4.csv"))
       }
-  #
 
-  #   }
-  # }
 
   if (!suppliedElsewhere("table5", sim)) {
     if (!suppliedElsewhere("table5URL", sim)) {
@@ -956,13 +939,8 @@ plotFun <- function(sim) {
   #       "The parameter table (appendix2_table5) does not have the expected number of columns. ",
   #       "This means parameters are missing. The default (older) parameter file will be used instead."
   #     )
-  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table5.csv"))) {
-  #       drive_download(as_id("12WsNPZUdYudazG9bfLqFJC9tqH_ZRhFN"),
-  #                      path = file.path(inputPath(sim), "appendix2_table5.csv"))
       }
 
-  #   }
-  # }
 
   if (!suppliedElsewhere("table6", sim)) {
     if (!suppliedElsewhere("table6URL", sim)) {
@@ -980,14 +958,7 @@ plotFun <- function(sim) {
   #       "The parameter table (appendix2_table6) does not have the expected number of columns. ",
   #       "This means parameters are missing. The default (older) parameter file will be used instead."
   #     )
-  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table6.csv"))) {
-  #       drive_download(as_id("1FiNyacoLKq96r2tNoXwQZG2YXOl0f6_H"),
-  #                      path = file.path(inputPath(sim), "appendix2_table6.csv"))
       }
-  #
-
-  #   }
-  # }
 
   if (!suppliedElsewhere("table7", sim)) {
     if (!suppliedElsewhere("table7URL", sim)) {
@@ -1006,13 +977,8 @@ plotFun <- function(sim) {
   #       "The parameter table (appendix2_table7) does not have the expected number of columns. ",
   #       "This means parameters are missing. The default (older) parameter file will be used instead."
   #     )
-  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table7.csv"))) {
-  #       drive_download(as_id("1ObbZzx_reQUB3repilx_30eCX1vjJOl_"),
-  #                      path = file.path(inputPath(sim), "appendix2_table7.csv"))
       }
 
-  #   }
-  # }
 
   if (!suppliedElsewhere("gcMeta", sim)) {
     if (!suppliedElsewhere("gcMetaURL", sim)) {
@@ -1022,9 +988,6 @@ plotFun <- function(sim) {
                                  targetFile = "gcMetaEg.csv",
                                  destinationPath = "inputs",
                                  fun = fread)
-      # }
-    # }
-
   }
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
@@ -1038,9 +1001,6 @@ plotFun <- function(sim) {
                                    targetFile = "cbmAdmin.csv",
                                    destinationPath = "inputs",
                                    fun = fread)
-      # }
-    # }
-
   }
 
   # canfi_species: for the Boudewyn parameters, the species have to be matched
@@ -1062,8 +1022,6 @@ plotFun <- function(sim) {
                                       targetFile = "canfi_species.csv",
                                       destinationPath = "inputs",
                                       fun = fread)
-    # }
-
   }
 
   # ! ----- STOP EDITING ----- ! #
