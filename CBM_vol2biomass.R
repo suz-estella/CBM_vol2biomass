@@ -68,8 +68,16 @@ defineModule(sim, list(
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv"
     ),
     expectsInput(
+      objectName = "table4URL", objectClass = "character",
+      desc = "URL for table 4"
+    ),
+    expectsInput(
       objectName = "table4", objectClass = "data.frame", desc = "Stem wood biomass model parameters for nonmerchantable-sized trees from Boudewyn et al 2007",
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv"
+    ),
+    expectsInput(
+      objectName = "table5URL", objectClass = "character",
+      desc = "URL for table 5"
     ),
     expectsInput(
       objectName = "table5", objectClass = "data.frame",
@@ -77,9 +85,17 @@ defineModule(sim, list(
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv"
     ),
     expectsInput(
+      objectName = "table6URL", objectClass = "character",
+      desc = "URL for table 6"
+    ),
+    expectsInput(
       objectName = "table6", objectClass = "data.frame",
       desc = "Proportion model parameters from Boudewyn et al. 2007",
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv"
+    ),
+    expectsInput(
+      objectName = "table7URL", objectClass = "character",
+      desc = "URL for table 7"
     ),
     expectsInput(
       objectName = "table7", objectClass = "data.frame",
@@ -93,6 +109,10 @@ defineModule(sim, list(
       sourceURL = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz"
     ),
     expectsInput(
+      objectName = "gcMetaURL", objectClass = "character",
+      desc = "URL for gcMeta"
+    ),
+    expectsInput(
       objectName = "gcMeta", objectClass = "data.frame",
       desc = paste("Provides equivalent between provincial boundaries",
                    "CBM-id for provincial boundaries and CBM-spatial unit ids"),
@@ -104,11 +124,19 @@ defineModule(sim, list(
       sourceURL = NA
     ),
     expectsInput(
+      objectName = "canfi_speciesURL", objectClass = "character",
+      desc = "URL for canfi_species"
+    ),
+    expectsInput(
       objectName = "canfi_species", objectClass = "data.frame",
       desc = paste("File containing the possible species in the Boudewyn table.",
                    "Note that if Boudewyn et al. added species, this should be updated.",
                    "Also note that such an update is very unlikely."),
       sourceURL = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/"
+    ),
+    expectsInput(
+      objectName = "userGcM3URL", objectClass = "character",
+      desc = "URL for userGcM3"
     ),
     expectsInput(
       objectName = "userGcM3File", objectClass = "character",
@@ -841,8 +869,10 @@ plotFun <- function(sim) {
   # curve ID, columns should be gcids	Age	MerchVolume
   ## TO DO: add a data manipulation to adjust if the m3 are not given on a yearly basis
   if (!suppliedElsewhere("userGcM3", sim)) {
-    if (!suppliedElsewhere("userGcM3File", sim)) {
-      sim$userGcM3 <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true",
+      if (!suppliedElsewhere("userGcM3URL", sim)) {
+        sim$userGcM3URL <- extractURL("userGcM3")
+      }
+      sim$userGcM3 <- prepInputs(url = sim$userGcM3URL,
                                  destinationPath = inputPath(sim),
                                  targetFile = "userGcM3.csv",
                                  fun = "data.table::fread")
@@ -851,8 +881,6 @@ plotFun <- function(sim) {
         "User has not supplied growth curves (m3 by age or the file name for the growth curves). ",
         "The default will be used which is for a region in Saskatchewan."
       )
-    }
-    names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
   }
 
 
@@ -864,10 +892,10 @@ plotFun <- function(sim) {
   ## however, NFIS changes the tables and seems to forget parameter columns at times.
   # browser()
   if (!suppliedElsewhere("table3", sim)) {
-    if (!suppliedElsewhere(table3URL, sim)) {
+    if (!suppliedElsewhere("table3URL", sim)) {
       sim$table3URL <- extractURL("table3")
     }
-    sim$table3 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv",
+    sim$table3 <- prepInputs(url = sim$table3URL,
                              destinationPath = "inputs",
                              fun = fread)
 
@@ -889,7 +917,10 @@ plotFun <- function(sim) {
   # }
 
   if (!suppliedElsewhere("table4", sim)) {
-    sim$table4 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv",
+    if (!suppliedElsewhere("table4URL", sim)) {
+      sim$table4URL <- extractURL("table4")
+    }
+    sim$table4 <- prepInputs(url = sim$table4URL,
                              destinationPath = "inputs",
                              fun = fread)
 
@@ -911,7 +942,10 @@ plotFun <- function(sim) {
   # }
 
   if (!suppliedElsewhere("table5", sim)) {
-    sim$table5 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv",
+    if (!suppliedElsewhere("table5URL", sim)) {
+      sim$table5URL <- extractURL("table5")
+    }
+    sim$table5 <- prepInputs(url = sim$table5URL,
                              destinationPath = "inputs",
                              fun = fread)
   #
@@ -931,7 +965,10 @@ plotFun <- function(sim) {
   # }
 
   if (!suppliedElsewhere("table6", sim)) {
-    sim$table6 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv",
+    if (!suppliedElsewhere("table6URL", sim)) {
+      sim$table6URL <- extractURL("table6")
+    }
+    sim$table6 <- prepInputs(url = sim$table6URL,
                              destinationPath = "inputs",
                              fun = fread)
   #
@@ -953,7 +990,10 @@ plotFun <- function(sim) {
   # }
 
   if (!suppliedElsewhere("table7", sim)) {
-    sim$table7 <- prepInputs(url = "https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv",
+    if (!suppliedElsewhere("table7URL", sim)) {
+      sim$table7URL <- extractURL("table7")
+    }
+    sim$table7 <- prepInputs(url = sim$table7URL,
                              destinationPath = "inputs",
                              fun = fread)
 
@@ -975,9 +1015,10 @@ plotFun <- function(sim) {
   # }
 
   if (!suppliedElsewhere("gcMeta", sim)) {
-    # if (!suppliedElsewhere("gcMetaFile", sim)) {
-      # if (!file.exists(file.path(inputPath(sim), "gcMetaEg.csv"))) {
-        sim$gcMeta <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/",
+    if (!suppliedElsewhere("gcMetaURL", sim)) {
+      sim$gcMetaURL <- extractURL("gcMeta")
+    }
+        sim$gcMeta <- prepInputs(url = sim$gcMetaURL,
                                  targetFile = "gcMetaEg.csv",
                                  destinationPath = "inputs",
                                  fun = fread)
@@ -990,9 +1031,10 @@ plotFun <- function(sim) {
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the
   # adminName to avoid confusion.
   if (!suppliedElsewhere("cbmAdmin", sim)) {
-    # if (!suppliedElsewhere("cbmAdminFile", sim)) {
-      # if (!file.exists(file.path(inputPath(sim), "cbmAdmin.csv"))) {
-        sim$cbmAdmin <- prepInputs(url = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz",
+    if (!suppliedElsewhere("cbmAdminURL", sim)) {
+      sim$cbmAdminURL <- extractURL("cbmAdmin")
+    }
+        sim$cbmAdmin <- prepInputs(url = sim$cbmAdminURL,
                                    targetFile = "cbmAdmin.csv",
                                    destinationPath = "inputs",
                                    fun = fread)
@@ -1013,8 +1055,10 @@ plotFun <- function(sim) {
   # 3  3       Hardwood
   # 4  9 Not Applicable
   if (!suppliedElsewhere("canfi_species", sim)) {
-    # if (!file.exists(file.path(inputPath(sim), "canfi_species.csv"))) {
-      sim$canfi_species <- prepInputs(url = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/",
+    if (!suppliedElsewhere("canfi_speciesURL", sim)) {
+      sim$canfi_speciesURL <- extractURL("canfi_species")
+    }
+      sim$canfi_species <- prepInputs(url = sim$canfi_speciesURL,
                                       targetFile = "canfi_species.csv",
                                       destinationPath = "inputs",
                                       fun = fread)
