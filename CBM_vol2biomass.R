@@ -59,13 +59,25 @@ defineModule(sim, list(
       sourceURL = NA
     ),
     expectsInput(
+      objectName = "table3URL", objectClass = "character",
+      desc = "URL for table 3"
+    ),
+    expectsInput(
       objectName = "table3", objectClass = "data.frame",
       desc = "Stem wood biomass model parameters for merchantable-sized trees from Boudewyn et al 2007",
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv"
     ),
     expectsInput(
+      objectName = "table4URL", objectClass = "character",
+      desc = "URL for table 4"
+    ),
+    expectsInput(
       objectName = "table4", objectClass = "data.frame", desc = "Stem wood biomass model parameters for nonmerchantable-sized trees from Boudewyn et al 2007",
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv"
+    ),
+    expectsInput(
+      objectName = "table5URL", objectClass = "character",
+      desc = "URL for table 5"
     ),
     expectsInput(
       objectName = "table5", objectClass = "data.frame",
@@ -73,9 +85,17 @@ defineModule(sim, list(
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv"
     ),
     expectsInput(
+      objectName = "table6URL", objectClass = "character",
+      desc = "URL for table 6"
+    ),
+    expectsInput(
       objectName = "table6", objectClass = "data.frame",
       desc = "Proportion model parameters from Boudewyn et al. 2007",
       sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv"
+    ),
+    expectsInput(
+      objectName = "table7URL", objectClass = "character",
+      desc = "URL for table 7"
     ),
     expectsInput(
       objectName = "table7", objectClass = "data.frame",
@@ -89,6 +109,10 @@ defineModule(sim, list(
       sourceURL = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz"
     ),
     expectsInput(
+      objectName = "gcMetaURL", objectClass = "character",
+      desc = "URL for gcMeta"
+    ),
+    expectsInput(
       objectName = "gcMeta", objectClass = "data.frame",
       desc = paste("Provides equivalent between provincial boundaries",
                    "CBM-id for provincial boundaries and CBM-spatial unit ids"),
@@ -100,11 +124,19 @@ defineModule(sim, list(
       sourceURL = NA
     ),
     expectsInput(
+      objectName = "canfi_speciesURL", objectClass = "character",
+      desc = "URL for canfi_species"
+    ),
+    expectsInput(
       objectName = "canfi_species", objectClass = "data.frame",
       desc = paste("File containing the possible species in the Boudewyn table.",
                    "Note that if Boudewyn et al. added species, this should be updated.",
                    "Also note that such an update is very unlikely."),
       sourceURL = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/"
+    ),
+    expectsInput(
+      objectName = "userGcM3URL", objectClass = "character",
+      desc = "URL for userGcM3"
     ),
     expectsInput(
       objectName = "userGcM3File", objectClass = "character",
@@ -211,6 +243,7 @@ Init <- function(sim) {
   # plot
   # Test for steps of 1 in the yield curves
   ##TODO have to make this more generic. Right now names of columns are fixed.
+
   ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = "gcids"]
   idsWithJumpGT1 <- ageJumps[jumps > 1]$gcids
   if (length(idsWithJumpGT1)) {
@@ -268,14 +301,14 @@ Init <- function(sim) {
     sim$table3$ecozone %in% eco, ])
   stable4 <- as.data.table(sim$table4[sim$table4$juris_id %in% thisAdmin$abreviation &
     sim$table4$ecozone %in% eco, ])
-  # table5 is different since there was not have enough data to fit models for
+
+   # table5 is different since there was not have enough data to fit models for
   # all provinces.
   # unique(sim$table5$juris_id)
   # [1] "AB" "BC" "NB" "NL" "NT"
   # Here we are hard-coding the closest equivalent province to
   # have a complete set.
   # This first If-statement is to catch the "no-province" match
-
   stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin$abreviation, ])
   ## DANGER HARD CODED: if NFIS changes table 5, this will no longer be valid
   # juris_id: there are only 5/13 possible
@@ -417,7 +450,7 @@ Init <- function(sim) {
   # to be processed. If sim$level3DT exist, its gcids needs to match these.
 
   curveID <- sim$curveID
-######## THESE WERE MY CHANGES BUT THEY SEEM TO CAUSE AN ERROR IN THE SPINUP
+######## THESE WERE MY (Celine) CHANGES BUT THEY SEEM TO CAUSE AN ERROR IN THE SPINUP
   # gcids <- factor(gcidsCreate(gcMeta[, ..curveID]))
   # setDT(gcMeta)
   # set(gcMeta, NULL, "gcids", gcids)
@@ -568,9 +601,7 @@ Init <- function(sim) {
 #  }
   message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
                       figPath))
-
   sim$cumPoolsClean <- cumPoolsClean
-
   colsToUseForestType <- c("forest_type_id", "gcids")
   forestType <- unique(gcMeta[, ..colsToUseForestType])
   #       #FYI:
@@ -590,15 +621,12 @@ Init <- function(sim) {
   ## the increments you provide are halved internally by this code:
   ## https://github.com/cat-cfs/libcbm_py/blob/main/libcbm/model/cbm_exn/cbm_exn_annual_process_dynamics.py#L22
 
-
   outCols <- c("id", "ecozone", "totMerch", "fol", "other")
   cumPoolsClean[, (outCols) := NULL]
   keepCols <- c("gcids", "age", "merch_inc", "foliage_inc", "other_inc", "forest_type_id")
   incCols <- c("merch_inc", "foliage_inc", "other_inc")
   setnames(cumPoolsClean,names(cumPoolsClean),
            keepCols)
-
-
   increments <- cumPoolsClean[, (incCols) := list(
     merch_inc, foliage_inc, other_inc
   )]
@@ -618,10 +646,14 @@ Init <- function(sim) {
   #   if (length(unique(increments[, max(age), by = "id"]$V1)) != 1)
   #     stop("All ages should end at the same age for each curveID")
   # }
-
   ## replace increments that are NA with 0s
+
   increments[is.na(increments), ] <- 0
   sim$growth_increments <- increments
+  # gcid_is_sw_hw <- increments[, .(is_sw = any(forest_type_id == 1)), .(gcids)]
+  # gcid_is_sw_hw$gcid <- factor(gcid_is_sw_hw$gcids, levels(sim$level3DT$gcids))
+  # sim$gcid_is_sw_hw <- gcid_is_sw_hw
+
   # END process growth curves -------------------------------------------------------------------------------
   # ! ----- STOP EDITING ----- ! #
 
@@ -649,9 +681,6 @@ plotFun <- function(sim) {
 }
 
 .inputObjects <- function(sim) {
-
-  ##TODO once this is working for spadesCBM-python, all URLs should be fixed in
-  ##here. Defaults for an example of the managed forests of SK will come next.
 
   # Any code written here will be run during the simInit for the purpose of creating
   # any objects required by this module and identified in the inputObjects element of defineModule.
@@ -838,19 +867,20 @@ plotFun <- function(sim) {
   # curve ID, columns should be gcids	Age	MerchVolume
   ## TO DO: add a data manipulation to adjust if the m3 are not given on a yearly basis
   if (!suppliedElsewhere("userGcM3", sim)) {
-    if (!suppliedElsewhere("userGcM3File", sim)) {
-      sim$userGcM3File <- file.path(inputPath(sim), "userGcM3.csv") ## TODO: use prepInputs from url
-      sim$userGcM3 <- fread(sim$userGcM3File)
-      #   prepInputs(url = "https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true",
-      #                            destinationPath = inputPath(sim),
-      #                            fun = "data.table::fread")
+      if (!suppliedElsewhere("userGcM3URL", sim)) {
+        sim$userGcM3URL <- extractURL("userGcM3")
+      }
+      sim$userGcM3 <- prepInputs(url = sim$userGcM3URL,
+                                 destinationPath = inputPath(sim),
+                                 targetFile = "userGcM3.csv",
+                                 fun = "data.table::fread")
+      names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
       message(
         "User has not supplied growth curves (m3 by age or the file name for the growth curves). ",
         "The default will be used which is for a region in Saskatchewan."
       )
-    }
-    names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
   }
+
 
   if (!suppliedElsewhere("curveID", sim)) {
     sim$curveID <- c("gcids")#, "ecozones")
@@ -858,10 +888,14 @@ plotFun <- function(sim) {
 
   ## tables from Boudewyn -- all downloaded from the NFIS site.
   ## however, NFIS changes the tables and seems to forget parameter columns at times.
-  # if (!suppliedElsewhere("table3", sim)) {
-  #   sim$table3 <- prepInputs(url = extractURL("table3"),
-  #                            destinationPath = inputPath(sim),
-  #                            fun = "data.table::fread")
+  if (!suppliedElsewhere("table3", sim)) {
+    if (!suppliedElsewhere("table3URL", sim)) {
+      sim$table3URL <- extractURL("table3")
+    }
+    sim$table3 <- prepInputs(url = sim$table3URL,
+                             destinationPath = "inputs",
+                             fun = fread)
+
   #
   #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
   #   # these are the columns needed in the functions for calculating biomass
@@ -871,19 +905,16 @@ plotFun <- function(sim) {
   #       "The parameter table (appendix2_table3) does not have the expected number of columns. ",
   #       "This means parameters are missing. The default (older) parameter file will be used instead."
   #     )
-  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table3.csv"))) {
-  #       drive_download(as_id("1CpgyJ1uJYqoOQiMxmPNZPTDKymfpelQC"),
-  #                      path = file.path(inputPath(sim), "appendix2_table3.csv"))
-  #     }
-      sim$table3 <- fread(file.path(inputPath(sim), "appendix2_table3.csv"))
-  #   }
-  # }
+      }
 
-  # if (!suppliedElsewhere("table4", sim)) {
-  #   sim$table4 <- prepInputs(url = extractURL("table4"),
-  #                            destinationPath = inputPath(sim),
-  #                            fun = "data.table::fread")
-  #
+  if (!suppliedElsewhere("table4", sim)) {
+    if (!suppliedElsewhere("table4URL", sim)) {
+      sim$table4URL <- extractURL("table4")
+    }
+    sim$table4 <- prepInputs(url = sim$table4URL,
+                             destinationPath = "inputs",
+                             fun = fread)
+
   #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
   #   t4hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
   #                     "a", "b", "k", "cap", "volm")
@@ -892,19 +923,16 @@ plotFun <- function(sim) {
   #       "The parameter table (appendix2_table4) does not have the expected number of columns. ",
   #       "This means parameters are missing. The default (older) parameter file will be used instead."
   #     )
-  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table4.csv"))) {
-  #       drive_download(as_id("1dGLFuysj1SBMzaJgMoLuVH_Hwo2329jb"),
-  #                      path = file.path(inputPath(sim), "appendix2_table4.csv"))
-  #     }
-  #
-      sim$table4 <- fread(file.path(inputPath(sim), "appendix2_table4.csv"))
-  #   }
-  # }
+      }
 
-  # if (!suppliedElsewhere("table5", sim)) {
-  #   sim$table5 <- prepInputs(url = extractURL("table5"),
-  #                            destinationPath = inputPath(sim),
-  #                            fun = "data.table::fread")
+
+  if (!suppliedElsewhere("table5", sim)) {
+    if (!suppliedElsewhere("table5URL", sim)) {
+      sim$table5URL <- extractURL("table5")
+    }
+    sim$table5 <- prepInputs(url = sim$table5URL,
+                             destinationPath = "inputs",
+                             fun = fread)
   #
   #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
   #   t5hasToHave <- c("juris_id", "ecozone", "canfi_genus", "genus", "a", "b", "k", "cap", "volm")
@@ -913,18 +941,16 @@ plotFun <- function(sim) {
   #       "The parameter table (appendix2_table5) does not have the expected number of columns. ",
   #       "This means parameters are missing. The default (older) parameter file will be used instead."
   #     )
-  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table5.csv"))) {
-  #       drive_download(as_id("12WsNPZUdYudazG9bfLqFJC9tqH_ZRhFN"),
-  #                      path = file.path(inputPath(sim), "appendix2_table5.csv"))
-  #     }
-      sim$table5 <- fread(file.path(inputPath(sim), "appendix2_table5.csv"))
-  #   }
-  # }
+      }
 
-  # if (!suppliedElsewhere("table6", sim)) {
-  #   sim$table6 <- prepInputs(url = extractURL("table6"),
-  #                            destinationPath = inputPath(sim),
-  #                            fun = "data.table::fread")
+
+  if (!suppliedElsewhere("table6", sim)) {
+    if (!suppliedElsewhere("table6URL", sim)) {
+      sim$table6URL <- extractURL("table6")
+    }
+    sim$table6 <- prepInputs(url = sim$table6URL,
+                             destinationPath = "inputs",
+                             fun = fread)
   #
   #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
   #   t6hasToHave <- c("juris_id", "ecozone", "canfi_species", "a1", "a2", "a3", "b1", "b2", "b3",
@@ -934,20 +960,16 @@ plotFun <- function(sim) {
   #       "The parameter table (appendix2_table6) does not have the expected number of columns. ",
   #       "This means parameters are missing. The default (older) parameter file will be used instead."
   #     )
-  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table6.csv"))) {
-  #       drive_download(as_id("1FiNyacoLKq96r2tNoXwQZG2YXOl0f6_H"),
-  #                      path = file.path(inputPath(sim), "appendix2_table6.csv"))
-  #     }
-  #
-      sim$table6 <- fread(file.path(inputPath(sim), "appendix2_table6.csv"))
-  #   }
-  # }
+      }
 
-  # if (!suppliedElsewhere("table7", sim)) {
-  #   sim$table7 <- prepInputs(url = extractURL("table7"),
-  #                            destinationPath = inputPath(sim),
-  #                            fun = "data.table::fread")
-  #
+  if (!suppliedElsewhere("table7", sim)) {
+    if (!suppliedElsewhere("table7URL", sim)) {
+      sim$table7URL <- extractURL("table7")
+    }
+    sim$table7 <- prepInputs(url = sim$table7URL,
+                             destinationPath = "inputs",
+                             fun = fread)
+
   #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
   #   t7hasToHave <- c("juris_id", "ecozone", "canfi_species", "vol_min", "vol_max", "p_sw_low",
   #                    "p_sb_low", "p_br_low", "p_fl_low", "p_sw_high", "p_sb_high", "p_br_high",
@@ -957,34 +979,31 @@ plotFun <- function(sim) {
   #       "The parameter table (appendix2_table7) does not have the expected number of columns. ",
   #       "This means parameters are missing. The default (older) parameter file will be used instead."
   #     )
-  #     if (!file.exists(file.path(inputPath(sim), "appendix2_table7.csv"))) {
-  #       drive_download(as_id("1ObbZzx_reQUB3repilx_30eCX1vjJOl_"),
-  #                      path = file.path(inputPath(sim), "appendix2_table7.csv"))
-  #     }
-      sim$table7 <- fread(file.path(inputPath(sim), "appendix2_table7.csv"))
-  #   }
-  # }
+      }
 
-  # if (!suppliedElsewhere("gcMeta", sim)) {
-  #   if (!suppliedElsewhere("gcMetaFile", sim)) {
-  #     if (!file.exists(file.path(inputPath(sim), "gcMetaEg.csv"))) {
-  #       drive_download(as_id(extractURL("gcMeta")), path = file.path(inputPath(sim), "gcMetaEg.csv"))
-  #     }
-  #   }
-    sim$gcMeta <- fread(file.path(inputPath(sim), "gcMetaEg.csv"))
-  # }
+
+  if (!suppliedElsewhere("gcMeta", sim)) {
+    if (!suppliedElsewhere("gcMetaURL", sim)) {
+      sim$gcMetaURL <- extractURL("gcMeta")
+    }
+        sim$gcMeta <- prepInputs(url = sim$gcMetaURL,
+                                 targetFile = "gcMetaEg.csv",
+                                 destinationPath = "inputs",
+                                 fun = fread)
+  }
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the
   # adminName to avoid confusion.
-  # if (!suppliedElsewhere("cbmAdmin", sim)) {
-  #   if (!suppliedElsewhere("cbmAdminFile", sim)) {
-  #     if (!file.exists(file.path(inputPath(sim), "cbmAdmin.csv"))) {
-  #       drive_download(as_id(extractURL("cbmAdmin")), path = file.path(inputPath(sim), "cbmAdmin.csv"))
-  #     }
-  #   }
-    sim$cbmAdmin <- fread(file.path(inputPath(sim), "cbmAdmin.csv"))
-  # }
+  if (!suppliedElsewhere("cbmAdmin", sim)) {
+    if (!suppliedElsewhere("cbmAdminURL", sim)) {
+      sim$cbmAdminURL <- extractURL("cbmAdmin")
+    }
+        sim$cbmAdmin <- prepInputs(url = sim$cbmAdminURL,
+                                   targetFile = "cbmAdmin.csv",
+                                   destinationPath = "inputs",
+                                   fun = fread)
+  }
 
   # canfi_species: for the Boudewyn parameters, the species have to be matched
   # with the ones in the Boudewyn tables. The choices HAVE to be one of these.
@@ -997,12 +1016,15 @@ plotFun <- function(sim) {
   # 2  2      Mixedwood
   # 3  3       Hardwood
   # 4  9 Not Applicable
-  # if (!suppliedElsewhere("canfi_species", sim)) {
-  #   if (!file.exists(file.path(inputPath(sim), "canfi_species.csv"))) {
-  #     drive_download(as_id(extractURL("canfi_species")), path = file.path(inputPath(sim), "canfi_species.csv"))
-  #   }
-    sim$canfi_species <- fread(file.path(inputPath(sim), "canfi_species.csv")) ## TODO: use prepInputs with url
-  # }
+  if (!suppliedElsewhere("canfi_species", sim)) {
+    if (!suppliedElsewhere("canfi_speciesURL", sim)) {
+      sim$canfi_speciesURL <- extractURL("canfi_species")
+    }
+      sim$canfi_species <- prepInputs(url = sim$canfi_speciesURL,
+                                      targetFile = "canfi_species.csv",
+                                      destinationPath = "inputs",
+                                      fun = fread)
+  }
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
