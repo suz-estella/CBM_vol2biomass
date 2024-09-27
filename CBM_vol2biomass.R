@@ -139,13 +139,6 @@ defineModule(sim, list(
       desc = "URL for userGcM3"
     ),
     expectsInput(
-      objectName = "userGcM3File", objectClass = "character",
-      desc = paste("User filename for the files containing:",
-                   "`gcids`, `Age`, `MerchVolume`.",
-                   "Default name `userGcM3`."),
-      sourceURL = NA
-    ),
-    expectsInput(
       objectName = "userGcM3", objectClass = "data.frame",
       desc = paste("User file containing:",
                    "`gcids`, `Age`, `MerchVolume`.",
@@ -863,7 +856,7 @@ plotFun <- function(sim) {
   #   )
   # }
 
-  # userGcM3 and userGcM3File, these files are the m3/ha and age info by growth
+  # userGcM3 and userGcM3URL, these files are the m3/ha and age info by growth
   # curve ID, columns should be gcids	Age	MerchVolume
   ## TO DO: add a data manipulation to adjust if the m3 are not given on a yearly basis
   if (!suppliedElsewhere("userGcM3", sim)) {
