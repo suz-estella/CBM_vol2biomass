@@ -16,7 +16,7 @@ defineModule(sim, list(
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
-    "PredictiveEcology/CBMutils@development (HEAD)",
+    "PredictiveEcology/CBMutils@celineTest (HEAD)",
     "ggforce", "ggplot2", "ggpubr", "googledrive", "mgcv", "quickPlot", "robustbase"
   ),
   parameters = rbind(
@@ -377,8 +377,8 @@ Init <- function(sim) {
 
   ##NOTES: lines below are old (spadesCBM-C++). We need to find a generic way to
   ##deal with getting the gcids, associated with sim$canfi_species. Note that
-  ##sim$canfi_species has a coumnthat identifies forest_type_id. forest_type_id
-  ##1 = sw, 2 = mixedwood (that we will currently treat as hw before this
+  ##sim$canfi_species has a column that identifies forest_type_id. forest_type_id
+  ##1 = sw, 2 = mixedwood (that we will currently treat as hw because this
   ##designation changes the calculation of the fine roots and disturbance
   ##matrices, and 3 = hw).
   ##These are the old lines:
