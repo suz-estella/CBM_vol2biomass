@@ -389,9 +389,6 @@ Init <- function(sim) {
   ##to the canfi_species (expectedInputs from URL). Right now just modifying
   ##gcMeta read-in as the SK example.
   gcMeta <- sim$gcMeta
-  ##TODO this needs to be removed as it is a hard coded modification
-  gcMeta <- gcMeta[,.(growth_curve_id, species, canfi_species, genus, forest_type_id)]
-  setnames(gcMeta, "growth_curve_id", "gcids")
   ##TODO have to insert some sort of check of gcMeta.
 
   # checking how many columns in gcMeta, if not 6, columns need to be added
@@ -643,9 +640,7 @@ Init <- function(sim) {
 
   increments[is.na(increments), ] <- 0
   sim$growth_increments <- increments
-  # gcid_is_sw_hw <- increments[, .(is_sw = any(forest_type_id == 1)), .(gcids)]
-  # gcid_is_sw_hw$gcid <- factor(gcid_is_sw_hw$gcids, levels(sim$level3DT$gcids))
-  # sim$gcid_is_sw_hw <- gcid_is_sw_hw
+
 
   # END process growth curves -------------------------------------------------------------------------------
   # ! ----- STOP EDITING ----- ! #
