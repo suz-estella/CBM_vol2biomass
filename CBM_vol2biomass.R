@@ -400,8 +400,8 @@ Init <- function(sim) {
     # https://drive.google.com/drive/folders/1OBDTp1v_3b3D3Yvg1pHLiW6A_GRklgpD?usp=sharing)
     # has all the possible options for canfi_species (number), genus (4 letter
     # code) and species (three letter code).
-    gcMeta2 <- gcMeta[, .(growth_curve_id, species)]
-    gcMeta2[, gcids := growth_curve_id]
+    gcMeta2 <- gcMeta[, .(gcids, species)]
+
     # check if all the species are in the canfi_species table
     ### THIS HAS NOT BEEN TESTED YET
     if (nrow(gcMeta2) == length(which(gcMeta$species %in% sim$canfi_species$name))) {
@@ -539,9 +539,9 @@ Init <- function(sim) {
     cumPoolsRaw[gcids %in% birchGcIds, fol := rep(cumPoolsRaw[gcids == 55, fol],length(birchGcIds))]
     cumPoolsRaw[gcids %in% birchGcIds, other := rep(cumPoolsRaw[gcids == 55, other],length(birchGcIds))]
   }else{##TODO this is very specific to SK not sure how to make this generic
-    meta55 <- sim$gcMeta[growth_curve_id == 55,]
+    meta55 <- sim$gcMeta[gcids == 55,]
     meta55[,growth_curve_component_id:=NULL]
-    setnames(meta55, "growth_curve_id", "gcids")
+    setnames(meta55, "gcids", "gcids")
     meta55$spatial_unit_id <- 28
     meta55$ecozones <- 9
     gc55 <- cumPoolsCreate(meta55$species, meta55, userGcM3[gcids == 55,],
