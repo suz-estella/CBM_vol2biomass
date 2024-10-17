@@ -116,7 +116,8 @@ defineModule(sim, list(
       objectName = "gcMeta", objectClass = "data.frame",
       desc = paste("Provides equivalent between provincial boundaries",
                    "CBM-id for provincial boundaries and CBM-spatial unit ids"),
-      sourceURL = "https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/"
+      sourceURL =
+        "https://drive.google.com/file/d/189SFlySTt0Zs6k57-PzQMuQ29LmycDmJ/view?usp=sharing"
     ),
     expectsInput(
       objectName = "gcMetaFile", objectClass = "character",
@@ -264,6 +265,7 @@ Init <- function(sim) {
   # if(!suppliedElsewhere("level3DT",sim)){
   #   userGcM3 <- sim$userGcM3
   # }else{
+
     userGcM3 <- sim$userGcM3
     #}
   spu <- unique(sim$spatialUnits)
@@ -540,7 +542,6 @@ Init <- function(sim) {
     cumPoolsRaw[gcids %in% birchGcIds, other := rep(cumPoolsRaw[gcids == 55, other],length(birchGcIds))]
   }else{##TODO this is very specific to SK not sure how to make this generic
     meta55 <- sim$gcMeta[gcids == 55,]
-    meta55[,growth_curve_component_id:=NULL]
     setnames(meta55, "gcids", "gcids")
     meta55$spatial_unit_id <- 28
     meta55$ecozones <- 9
@@ -974,10 +975,12 @@ plotFun <- function(sim) {
     if (!suppliedElsewhere("gcMetaURL", sim)) {
       sim$gcMetaURL <- extractURL("gcMeta")
     }
+
         sim$gcMeta <- prepInputs(url = sim$gcMetaURL,
                                  targetFile = "gcMetaEg.csv",
                                  destinationPath = "inputs",
-                                 fun = fread)
+                                 fun = fread,
+                                 purge = 7)
   }
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
