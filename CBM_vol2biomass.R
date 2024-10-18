@@ -920,7 +920,7 @@ plotFun <- function(sim) {
       sim$table5URL <- extractURL("table5")
     }
     sim$table5 <- prepInputs(url = sim$table5URL,
-                             destinationPath = "inputs",
+                             destinationPath = inputPath(sim),
                              fun = fread)
   #
   #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
@@ -938,7 +938,7 @@ plotFun <- function(sim) {
       sim$table6URL <- extractURL("table6")
     }
     sim$table6 <- prepInputs(url = sim$table6URL,
-                             destinationPath = "inputs",
+                             destinationPath = inputPath(sim),
                              fun = fread)
   #
   #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
@@ -956,7 +956,7 @@ plotFun <- function(sim) {
       sim$table7URL <- extractURL("table7")
     }
     sim$table7 <- prepInputs(url = sim$table7URL,
-                             destinationPath = "inputs",
+                             destinationPath = inputPath(sim),
                              fun = fread)
 
   #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
@@ -978,9 +978,9 @@ plotFun <- function(sim) {
 
         sim$gcMeta <- prepInputs(url = sim$gcMetaURL,
                                  targetFile = "gcMetaEg.csv",
-                                 destinationPath = "inputs",
-                                 fun = fread
-                                 #purge = 7
+                                 destinationPath = inputPath(sim),
+                                 fun = fread,
+                                 purge = 7
                                  )
   }
 
@@ -993,7 +993,7 @@ plotFun <- function(sim) {
     }
         sim$cbmAdmin <- prepInputs(url = sim$cbmAdminURL,
                                    targetFile = "cbmAdmin.csv",
-                                   destinationPath = "inputs",
+                                   destinationPath = inputPath(sim),
                                    fun = fread)
   }
 
@@ -1014,7 +1014,7 @@ plotFun <- function(sim) {
     }
       sim$canfi_species <- prepInputs(url = sim$canfi_speciesURL,
                                       targetFile = "canfi_species.csv",
-                                      destinationPath = "inputs",
+                                      destinationPath = inputPath(sim),
                                       fun = fread)
   }
 
