@@ -979,8 +979,9 @@ plotFun <- function(sim) {
         sim$gcMeta <- prepInputs(url = sim$gcMetaURL,
                                  targetFile = "gcMetaEg.csv",
                                  destinationPath = "inputs",
-                                 fun = fread,
-                                 #purge = 7)
+                                 fun = fread
+                                 #purge = 7
+                                 )
   }
 
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
