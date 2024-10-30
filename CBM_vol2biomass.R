@@ -176,10 +176,10 @@ defineModule(sim, list(
     createsOutput(objectName = "gcMetaAllCols",
                   objectClass = "data.frame",
                   desc = "`gcMeta` as above plus ecozones"),
-    createsOutput(objectName = "plotsRawCumulativeBiomass", objectClass = "plot", ## TODO invalid class
+    createsOutput(objectName = "plotsRawCumulativeBiomass", objectClass = "plot",
                   desc = paste("Plot of cumulative m3/ha curves",
                                "translated into tonnes of carbon/ha, per AG pool,
-                               prior to any smoothing")), ## TODO: not used
+                               prior to any smoothing")),
     createsOutput(objectName = "growth_increments", objectClass = "matrix", desc = "Matrix of the 1/2 increment that will be used to create the `gcHash`"),
     createsOutput(objectName = "gcHash", objectClass = "environment",
                   desc = paste("Environment pointing to each gcID, that is itself an environment,",
@@ -233,11 +233,6 @@ Init <- function(sim) {
   # user provides userGcM3: incoming cumulative m3/ha
   # plot
 
-  # user provides userGcM3: incoming cumulative m3/ha
-  # plot
-  # Test for steps of 1 in the yield curves
-  ##TODO have to make this more generic. Right now names of columns are fixed.
-
   ageJumps <- sim$userGcM3[, list(jumps = unique(diff(as.numeric(Age)))), by = "gcids"]
   idsWithJumpGT1 <- ageJumps[jumps > 1]$gcids
   if (length(idsWithJumpGT1)) {
@@ -256,7 +251,7 @@ Init <- function(sim) {
   }
 
   sim$volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = gcids, colour = gcids)) +
-    geom_line() ## TODO: move to plotInit event
+    geom_line()
   message("User: please look at the curve you provided via sim$volCurves")
   ## not all curves provided are used in the simulation - and ***FOR NOW*** each
   ## pixels only gets assigned one growth curve (no transition, no change in
@@ -276,19 +271,6 @@ Init <- function(sim) {
 
   # START reducing Biomass model parameter tables -----------------------------------------------
   # reducing the parameter tables to the jurisdiction or ecozone we have in the study area
-  ## To run module independently, the gcID used in this translation can be specified here
-  # if(!suppliedElsewhere("spatialUnits",sim)){
-  #   spu  <- ### USER TO PROVIDE SPU FOR EACH gcID###########
-  # }else{
-  ####spu <- unique(sim$spatialUnits)
-  # }
-  # if(!suppliedElsewhere("ecozones",sim)){
-  #   eco <- ### USER TO PROVIDE SPU FOR EACH gcID###########
-  # }else{
-
-  ####eco <- unique(sim$ecozones)
-  # }
-  ####thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% spu & sim$cbmAdmin$EcoBoundaryID %in% eco, ]
 
   # "s" table for small table3, 4, 5, 6, 7 - tables limited to the targeted
   # ecozones and jurisdictions
@@ -305,7 +287,6 @@ Init <- function(sim) {
   # have a complete set.
   # This first If-statement is to catch the "no-province" match
   stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin$abreviation, ])
-  ## DANGER HARD CODED: if NFIS changes table 5, this will no longer be valid
   # juris_id: there are only 5/13 possible
   # these are the provinces available: AB BC NB NF NT
   # for the non match these would be the equivalent
@@ -327,7 +308,6 @@ Init <- function(sim) {
     stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin5$abreviation, ])
   }
   # This second "if-statement" is to catch is the "no-ecozone" match
-  ### THIS NEEDS TO BE TESTED
   if (nrow(stable5.2) > 0) {
     stable5 <- stable5.2[ecozone %in% eco, ]
   } else {
@@ -377,21 +357,9 @@ Init <- function(sim) {
     sim$table6$ecozone %in% eco, ])
   # END reducing Biomass model parameter tables -----------------------------------------------
 
-  ##NOTES: lines below are old (spadesCBM-C++). We need to find a generic way to
-  ##deal with getting the gcids, associated with sim$canfi_species. Note that
-  ##sim$canfi_species has a column that identifies forest_type_id. forest_type_id
-  ##1 = sw, 2 = mixedwood (that we will currently treat as hw because this
-  ##designation changes the calculation of the fine roots and disturbance
-  ##matrices, and 3 = hw).
-  ##These are the old lines:
-  # Read-in user provided meta data for growth curves. This could be a complete
-  # data frame with the same columns as gcMetaEg.csv OR is could be only curve
-  # id and species.
-  ##TODO start from gcids and species that comes from CBM_dataPrep_XX and match
-  ##to the canfi_species (expectedInputs from URL). Right now just modifying
+
   ##gcMeta read-in as the SK example.
   gcMeta <- sim$gcMeta
-  ##TODO have to insert some sort of check of gcMeta.
 
   # checking how many columns in gcMeta, if not 6, columns need to be added
   if (!ncol(gcMeta) == 5) {
@@ -405,7 +373,6 @@ Init <- function(sim) {
     gcMeta2 <- gcMeta[, .(gcids, species)]
 
     # check if all the species are in the canfi_species table
-    ### THIS HAS NOT BEEN TESTED YET
     if (nrow(gcMeta2) == length(which(gcMeta$species %in% sim$canfi_species$name))) {
       spsMatch <- sim$canfi_species[
         , which(name %in% gcMeta2$species),
@@ -415,23 +382,15 @@ Init <- function(sim) {
       names(spsMatch) <- c("canfi_species", "genus", "species", "forest_type_id")
       setkey(gcMeta2, species)
       setkey(spsMatch, species)
-      gcMeta3 <- merge(gcMeta2, spsMatch) # I do not think the order of the columns matter
+      gcMeta3 <- merge(gcMeta2, spsMatch)
       gcMeta <- gcMeta3
     }
-    ### PUT SOMETHING HERE IF THE SPECIES DONT MATCH...NOT SURE WHAT - ERROR MESSAGE?
   }
-
-  ##TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
-  # if (!unique(unique(userGcM3$gcids) == unique(gcMeta$gcids))) {
-  #   stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
-  # }
 
   # assuming gcMeta has now 5 columns, it needs a 7th: spatial_unit_id. This
   # will be used in the convertM3biom() fnct to link to the right ecozone
   # and it only needs the gc we are using in this sim.
   gcThisSim <- unique(sim$spatialDT[,.(gcids, spatial_unit_id, ecozones)])
-  #gcThisSim <- as.data.table(unique(cbind(sim$spatialUnits, sim$gcids)))
-  #names(gcThisSim) <- c("spatial_unit_id", "gcids")
   setkey(gcThisSim, gcids)
   setkey(gcMeta, gcids)
   gcMeta <- merge(gcMeta, gcThisSim)
@@ -442,10 +401,7 @@ Init <- function(sim) {
   # to be processed. If sim$level3DT exist, its gcids needs to match these.
 
   curveID <- sim$curveID
-######## THESE WERE MY (Celine) CHANGES BUT THEY SEEM TO CAUSE AN ERROR IN THE SPINUP
-  # gcids <- factor(gcidsCreate(gcMeta[, ..curveID]))
-  # setDT(gcMeta)
-  # set(gcMeta, NULL, "gcids", gcids)
+
   if (!is.null(sim$level3DT)) {
     gcidsLevels <- levels(sim$level3DT$gcids)
     gcids <- factor(gcidsCreate(gcMeta[, ..curveID]), levels = gcidsLevels)
@@ -454,11 +410,6 @@ Init <- function(sim) {
   }
 
   set(gcMeta, NULL, "gcids", gcids)
-
-  # if (!is.null(sim$level3DT)) {
-  #   gcidsLevels <- levels(gcids)
-  #   gcids <- factor(gcidsCreate(sim$levelDT[, ..curveID]), levels = gcidsLevels)
-  #  }
 
   sim$gcMetaAllCols <- gcMeta
 
@@ -481,7 +432,6 @@ Init <- function(sim) {
   ### if not, we need to extrapolate to make them annual
   minAgeId <- cumPools[,.(minAge = max(0, min(age) - 1)), by = "gcids"]
   fill0s <- minAgeId[,.(age = seq(from = 0, to = minAge, by = 1)), by = "gcids"]
-  # might not need this
   length0s <- fill0s[,.(toMinAge = length(age)), by = "gcids"]
   # these are going to be 0s
   carbonVars <- data.table(gcids = unique(fill0s$gcids),
@@ -499,28 +449,8 @@ Init <- function(sim) {
 
   # 3. Plot the curves that are directly out of the Boudewyn-translation
   # Usually, these need to be, at a minimum, smoothed out.
-  ##TODO not sure why this is not working - to fix - workarousn is hard coded.
-  # figPath <- checkPath(if (is.na(P(sim)$outputFigurePath)) {
-  #     file.path(modulePath(sim), currentModule(sim), "figures")
-  # } else {
-  #     if (basename(P(sim)$outputFigurePath) == currentModule(sim)) {
-  #       P(sim)$outputFigurePath
-  #     } else {
-  #       file.path(P(sim)$outputFigurePath, currentModule(sim))
-  #     }
-  # }, create = TRUE)
-  figPath <- file.path(modulePath(sim), currentModule(sim), "figures")
 
-  ##TODO either make this work or get rid of it.
-  # plotting and save the plots of the raw-translation in the sim$ don't really
-  # need this b/c the next use of m3ToBiomPlots fnct plots all 6 curves, 3
-  # raw-translation and 3-smoothed curves resulting from the Chapman-Richards
-  # parameter finding in the cumPoolsSmooth fnct. Leaving these lines here as
-  # exploration tools.
-  # if (!is.na(P(sim)$.plotInitialTime))
-  # sim$plotsRawCumulativeBiomass <- m3ToBiomPlots( inc = cumPoolsRaw,
-  #                                        path = figPath,
-  #                                        filenameBase = "rawCumBiomass_")
+  figPath <- file.path(modulePath(sim), currentModule(sim), "figures")
 
   # Fixing of non-smooth curves
   ## SK is a great example of poor performance of the Boudewyn et al 2007
@@ -532,15 +462,13 @@ Init <- function(sim) {
   ## catches in place in the cumSmoothPools failed, a hard fix was needed. The
   ## fol and other columns in gcids 37 and 58, will be replace by the fol and
   ## other of gcids 55.
-##TODO replace this hardcoding
   birchGcIds <- c("37", "58")
   birchColsChg <- c("fol", "other")
-  ##TODO this (which curve to replace the wonky ones with) will have to be
-  ##decided by the user after they look at all the curves.
+
   if (any(cumPoolsRaw$gcids == 55)) {
     cumPoolsRaw[gcids %in% birchGcIds, fol := rep(cumPoolsRaw[gcids == 55, fol],length(birchGcIds))]
     cumPoolsRaw[gcids %in% birchGcIds, other := rep(cumPoolsRaw[gcids == 55, other],length(birchGcIds))]
-  }else{##TODO this is very specific to SK not sure how to make this generic
+  }else{##this is very specific to SK not sure how to make this generic
     meta55 <- sim$gcMeta[gcids == 55,]
     setnames(meta55, "gcids", "gcids")
     meta55$spatial_unit_id <- 28
@@ -555,22 +483,13 @@ Init <- function(sim) {
     cumPoolsRaw[gcids %in% birchGcIds,other := gc55raw[, other]]
   }
 
-  cumPoolsClean <- cumPoolsSmooth(cumPoolsRaw) ##TODO Caching seems to produce an error.
+  cumPoolsClean <- cumPoolsSmooth(cumPoolsRaw)
   #Note: this will produce a warning if one of the curve smoothing efforts doesn't converge
 
-
   # a[, totMerch := totMerchNew]
-  ##TODO - Forcing the plotting to happen (this can be reverted to
-  ##P(sim)$.plotInitialTime) once it is working properly)
-  #if (!is.na(P(sim)$.plotInitialTime)) {
     figs <- m3ToBiomPlots(inc = cumPoolsClean,
                   path = figPath,
                   filenameBase = "cumPools_smoothed_postChapmanRichards")
-    ##TODO |< Cache() seems to cause an error
-    #Error in obj_size_(dots, env, size_node(), size_vector()) :
-    #bad binding access.
-  #}
-
 
   ## keeping the new curves - at this point they are still cumulative
   set(cumPoolsClean, NULL, colNames, NULL)
@@ -582,13 +501,10 @@ Init <- function(sim) {
   cumPoolsClean[, (incCols) := lapply(.SD, function(x) c(NA, diff(x))), .SDcols = colNames,
                 by = eval("gcids")]
   colsToUse33 <- c("age", "gcids", incCols)
-  ##TODO - Forcing the plotting to happen (this can be reverted to
-  ##P(sim)$.plotInitialTime and Cached) once it is working properly)
-#  if (!is.na(P(sim)$.plotInitialTime)) {
     rawIncPlots <- m3ToBiomPlots(inc = cumPoolsClean[, ..colsToUse33],
                          path = figPath,
                          title = "Smoothed increments merch fol other by gc id",
-                         filenameBase = "Increments") ##TODO caching results in error
+                         filenameBase = "Increments")
 #  }
   message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
                       figPath))
@@ -623,22 +539,7 @@ Init <- function(sim) {
   )]
   setorderv(increments, c("gcids", "age"))
 
-  ##TODO rework assertion for modification 1
-  # incColKeep <- c("id", "age", incCols)
-  # set(increments, NULL, "id", as.numeric(increments[["gcids"]]))
-  # set(increments, NULL, setdiff(colnames(increments), incColKeep), NULL)
-  # setcolorder(increments, incColKeep)
-  #
-  # # Assertions
-  # if (isTRUE(P(sim)$doAssertions)) {
-  #   # All should have same min age
-  #   if (length(unique(increments[, min(age), by = "id"]$V1)) != 1)
-  #     stop("All ages should start at the same age for each curveID")
-  #   if (length(unique(increments[, max(age), by = "id"]$V1)) != 1)
-  #     stop("All ages should end at the same age for each curveID")
-  # }
   ## replace increments that are NA with 0s
-
   increments[is.na(increments), ] <- 0
   sim$growth_increments <- increments
 
@@ -670,21 +571,6 @@ plotFun <- function(sim) {
 }
 
 .inputObjects <- function(sim) {
-
-  # Any code written here will be run during the simInit for the purpose of creating
-  # any objects required by this module and identified in the inputObjects element of defineModule.
-  # This is useful if there is something required before simulation to produce the module
-  # object dependencies, including such things as downloading default datasets, e.g.,
-  # downloadData("LCC2005", modulePath(sim)).
-  # Nothing should be created here that does not create a named object in inputObjects.
-  # Any other initiation procedures should be put in "init" eventType of the doEvent function.
-  # Note: the module developer can check if an object is 'suppliedElsewhere' to
-  # selectively skip unnecessary steps because the user has provided those inputObjects in the
-  # simInit call, or another module will supply or has supplied it. e.g.,
-  # if (!suppliedElsewhere('defaultColor', sim)) {
-  #   sim$map <- Cache(prepInputs, extractURL('map')) # download, extract, load file from url in sourceURL
-  # }
-
   # cacheTags <- c(currentModule(sim), "function:.inputObjects") ## uncomment this if Cache is being used
   # dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   # message(currentModule(sim), ": using dataPath '", dPath, "'.")
@@ -854,7 +740,6 @@ plotFun <- function(sim) {
 
   # userGcM3 and userGcM3URL, these files are the m3/ha and age info by growth
   # curve ID, columns should be gcids	Age	MerchVolume
-  ## TO DO: add a data manipulation to adjust if the m3 are not given on a yearly basis
   if (!suppliedElsewhere("userGcM3", sim)) {
       if (!suppliedElsewhere("userGcM3URL", sim)) {
         sim$userGcM3URL <- extractURL("userGcM3")
@@ -884,16 +769,6 @@ plotFun <- function(sim) {
     sim$table3 <- prepInputs(url = sim$table3URL,
                              destinationPath = "inputs",
                              fun = fread)
-
-  #
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   # these are the columns needed in the functions for calculating biomass
-  #   t3hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species", "a", "b", "volm")
-  #   if (length(which(colnames(sim$table3) %in% t3hasToHave)) != length(t3hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table3) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
   if (!suppliedElsewhere("table4", sim)) {
@@ -903,15 +778,6 @@ plotFun <- function(sim) {
     sim$table4 <- prepInputs(url = sim$table4URL,
                              destinationPath = "inputs",
                              fun = fread)
-
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t4hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
-  #                     "a", "b", "k", "cap", "volm")
-  #   if (!length(which(colnames(sim$table4) %in% t4hasToHave)) == length(t4hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table4) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
 
@@ -922,14 +788,6 @@ plotFun <- function(sim) {
     sim$table5 <- prepInputs(url = sim$table5URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-  #
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t5hasToHave <- c("juris_id", "ecozone", "canfi_genus", "genus", "a", "b", "k", "cap", "volm")
-  #   if (!length(which(colnames(sim$table5) %in% t5hasToHave)) == length(t5hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table5) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
 
@@ -940,15 +798,6 @@ plotFun <- function(sim) {
     sim$table6 <- prepInputs(url = sim$table6URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-  #
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t6hasToHave <- c("juris_id", "ecozone", "canfi_species", "a1", "a2", "a3", "b1", "b2", "b3",
-  #                    "c1", "c2", "c3" )
-  #   if (!length(which(colnames(sim$table6) %in% t6hasToHave)) == length(t6hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table6) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
   if (!suppliedElsewhere("table7", sim)) {
@@ -958,16 +807,6 @@ plotFun <- function(sim) {
     sim$table7 <- prepInputs(url = sim$table7URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t7hasToHave <- c("juris_id", "ecozone", "canfi_species", "vol_min", "vol_max", "p_sw_low",
-  #                    "p_sb_low", "p_br_low", "p_fl_low", "p_sw_high", "p_sb_high", "p_br_high",
-  #                    "p_fl_high")
-  #   if (length(which(colnames(sim$table7) %in% t7hasToHave)) != length(t7hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table7) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
 
@@ -1000,7 +839,7 @@ plotFun <- function(sim) {
   # canfi_species: for the Boudewyn parameters, the species have to be matched
   # with the ones in the Boudewyn tables. The choices HAVE to be one of these.
   # This contains three columns, canfi_species, genus and species form the
-  # publication and I added (manually) one more: forest_type_id. That variable is a CBM-CFS3
+  # publication and one more manually added: forest_type_id. That variable is a CBM-CFS3
   # indicator as follows:
   # cbmTables$forest_type
   # id           name
