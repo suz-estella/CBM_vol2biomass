@@ -232,9 +232,6 @@ doEvent.CBM_vol2biomass <- function(sim, eventTime, eventType) {
 Init <- function(sim) {
   # user provides userGcM3: incoming cumulative m3/ha
   # plot
-
-  # user provides userGcM3: incoming cumulative m3/ha
-  # plot
   # Test for steps of 1 in the yield curves
   ##TODO have to make this more generic. Right now names of columns are fixed.
 
@@ -442,10 +439,6 @@ Init <- function(sim) {
   # to be processed. If sim$level3DT exist, its gcids needs to match these.
 
   curveID <- sim$curveID
-######## THESE WERE MY (Celine) CHANGES BUT THEY SEEM TO CAUSE AN ERROR IN THE SPINUP
-  # gcids <- factor(gcidsCreate(gcMeta[, ..curveID]))
-  # setDT(gcMeta)
-  # set(gcMeta, NULL, "gcids", gcids)
   if (!is.null(sim$level3DT)) {
     gcidsLevels <- levels(sim$level3DT$gcids)
     gcids <- factor(gcidsCreate(gcMeta[, ..curveID]), levels = gcidsLevels)
@@ -499,7 +492,7 @@ Init <- function(sim) {
 
   # 3. Plot the curves that are directly out of the Boudewyn-translation
   # Usually, these need to be, at a minimum, smoothed out.
-  ##TODO not sure why this is not working - to fix - workarousn is hard coded.
+  ##TODO not sure why this is not working - to fix - workaround is hard coded.
   # figPath <- checkPath(if (is.na(P(sim)$outputFigurePath)) {
   #     file.path(modulePath(sim), currentModule(sim), "figures")
   # } else {
@@ -527,7 +520,7 @@ Init <- function(sim) {
   ## models. The "translation" does not work well with white birch (probably
   ## because there was not enough data in SK in the model-building data). So,
   ## the resulting curves are for fol and other are nonsensical. This can be
-  ## seen by visually inspecting the curves going into the trasnlations (run
+  ## seen by visually inspecting the curves going into the translations (run
   ## m3ToBiomPlots commented above). Here, the user, decided that after all the
   ## catches in place in the cumSmoothPools failed, a hard fix was needed. The
   ## fol and other columns in gcids 37 and 58, will be replace by the fol and
@@ -540,7 +533,7 @@ Init <- function(sim) {
   if (any(cumPoolsRaw$gcids == 55)) {
     cumPoolsRaw[gcids %in% birchGcIds, fol := rep(cumPoolsRaw[gcids == 55, fol],length(birchGcIds))]
     cumPoolsRaw[gcids %in% birchGcIds, other := rep(cumPoolsRaw[gcids == 55, other],length(birchGcIds))]
-  }else{##TODO this is very specific to SK not sure how to make this generic
+  }else{
     meta55 <- sim$gcMeta[gcids == 55,]
     setnames(meta55, "gcids", "gcids")
     meta55$spatial_unit_id <- 28
@@ -670,20 +663,6 @@ plotFun <- function(sim) {
 }
 
 .inputObjects <- function(sim) {
-
-  # Any code written here will be run during the simInit for the purpose of creating
-  # any objects required by this module and identified in the inputObjects element of defineModule.
-  # This is useful if there is something required before simulation to produce the module
-  # object dependencies, including such things as downloading default datasets, e.g.,
-  # downloadData("LCC2005", modulePath(sim)).
-  # Nothing should be created here that does not create a named object in inputObjects.
-  # Any other initiation procedures should be put in "init" eventType of the doEvent function.
-  # Note: the module developer can check if an object is 'suppliedElsewhere' to
-  # selectively skip unnecessary steps because the user has provided those inputObjects in the
-  # simInit call, or another module will supply or has supplied it. e.g.,
-  # if (!suppliedElsewhere('defaultColor', sim)) {
-  #   sim$map <- Cache(prepInputs, extractURL('map')) # download, extract, load file from url in sourceURL
-  # }
 
   # cacheTags <- c(currentModule(sim), "function:.inputObjects") ## uncomment this if Cache is being used
   # dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
