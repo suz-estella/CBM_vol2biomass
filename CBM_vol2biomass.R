@@ -861,7 +861,7 @@ plotFun <- function(sim) {
       sim$table3URL <- extractURL("table3")
     }
     sim$table3 <- prepInputs(url = sim$table3URL,
-                             destinationPath = "inputs",
+                             destinationPath = inputPath(sim),
                              fun = fread)
 
   #
@@ -880,7 +880,7 @@ plotFun <- function(sim) {
       sim$table4URL <- extractURL("table4")
     }
     sim$table4 <- prepInputs(url = sim$table4URL,
-                             destinationPath = "inputs",
+                             destinationPath = inputPath(sim),
                              fun = fread)
 
   #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
