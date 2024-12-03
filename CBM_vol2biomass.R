@@ -54,139 +54,114 @@ defineModule(sim, list(
     # expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     # this are variables in inputed data.tables:SpatialUnitID, EcoBoundaryID, juris_id, ecozone, jur, eco, name, gcids, plotsRawCumulativeBiomass, checkInc
     expectsInput(
-      objectName = "curveID", objectClass = "character",
-      desc = "Vector of column names that together, uniquely define growth curve id",
-      sourceURL = NA
-    ),
-    expectsInput(
-      objectName = "table3URL", objectClass = "character",
-      desc = "URL for table 3"
-    ),
-    expectsInput(
-      objectName = "table3", objectClass = "data.frame",
-      desc = "Stem wood biomass model parameters for merchantable-sized trees from Boudewyn et al 2007",
-      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv"
-    ),
-    expectsInput(
-      objectName = "table4URL", objectClass = "character",
-      desc = "URL for table 4"
-    ),
-    expectsInput(
-      objectName = "table4", objectClass = "data.frame", desc = "Stem wood biomass model parameters for nonmerchantable-sized trees from Boudewyn et al 2007",
-      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv"
-    ),
-    expectsInput(
-      objectName = "table5URL", objectClass = "character",
-      desc = "URL for table 5"
-    ),
-    expectsInput(
-      objectName = "table5", objectClass = "data.frame",
-      desc = "Stem wood biomass model parameters for sapling-sized trees from Boudewyn et al. 2007.",
-      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv"
-    ),
-    expectsInput(
-      objectName = "table6URL", objectClass = "character",
-      desc = "URL for table 6"
-    ),
-    expectsInput(
-      objectName = "table6", objectClass = "data.frame",
-      desc = "Proportion model parameters from Boudewyn et al. 2007",
-      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv"
-    ),
-    expectsInput(
-      objectName = "table7URL", objectClass = "character",
-      desc = "URL for table 7"
-    ),
-    expectsInput(
-      objectName = "table7", objectClass = "data.frame",
-      desc = "Caps on proportion models from Boudewyn et al. 2007.",
-      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv"
-    ),
-    expectsInput(
-      objectName = "cbmAdmin", objectClass = "data.frame",
-      desc = paste("Provides equivalent between provincial boundaries,",
-                   "CBM-id for provincial boundaries and CBM-spatial unit ids"),
-      sourceURL = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz"
-    ),
-    expectsInput(
-      objectName = "gcMetaURL", objectClass = "character",
-      desc = "URL for gcMeta"
-    ),
-    expectsInput(
-      objectName = "gcMeta", objectClass = "data.frame",
-      desc = paste("Provides equivalent between provincial boundaries",
-                   "CBM-id for provincial boundaries and CBM-spatial unit ids"),
-      sourceURL =
-        "https://drive.google.com/file/d/189SFlySTt0Zs6k57-PzQMuQ29LmycDmJ/view?usp=sharing"
-    ),
-    expectsInput(
-      objectName = "gcMetaFile", objectClass = "character",
-      desc = "File name and location for the user provided `gcMeta` data.frame",
-      sourceURL = NA
-    ),
-    expectsInput(
-      objectName = "canfi_speciesURL", objectClass = "character",
-      desc = "URL for canfi_species"
-    ),
-    expectsInput(
-      objectName = "canfi_species", objectClass = "data.frame",
-      desc = paste("File containing the possible species in the Boudewyn table.",
-                   "Note that if Boudewyn et al. added species, this should be updated.",
-                   "Also note that such an update is very unlikely."),
-      sourceURL = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/"
-    ),
-    expectsInput(
       objectName = "userGcM3URL", objectClass = "character",
-      desc = "URL for userGcM3"
-    ),
+      desc = "URL for userGcM3"),
     expectsInput(
       objectName = "userGcM3", objectClass = "data.frame",
       desc = paste("User file containing:",
                    "`gcids`, `Age`, `MerchVolume`.",
                    "Default name `userGcM3`."),
-      sourceURL = "https://drive.google.com/file/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m"
-    ),
-    expectsInput(
-      objectName = "ecozones", objectClass = "data.table",
-      desc = paste("Vector, one for each stand, indicating the numeric representation",
-                   "of the Canadian ecozones, as used in CBM-CFS3"),
-      sourceURL = NA
-    ),
-    expectsInput(
-      objectName = "gcids", objectClass = "data.table",
-      desc = "The identification of which growth curves to use on the specific stands provided by the user.",
-      sourceURL = NA
-    ),
+      sourceURL = "https://drive.google.com/file/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m"),
     expectsInput(
       objectName = "spatialUnits", objectClass = "data.table",
       desc = paste("the table linking the spu id, with the `disturbance_matrix_id` and the events.",
                    "The events are the possible raster values from the disturbance rasters of Wulder and White."),
-      sourceURL = NA
-    )
+      sourceURL = NA),
+    expectsInput(
+      objectName = "cbmAdmin", objectClass = "data.frame",
+      desc = paste("Provides equivalent between provincial boundaries,",
+                   "CBM-id for provincial boundaries and CBM-spatial unit ids"),
+      sourceURL = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz"),
+    expectsInput(
+      objectName = "cbmAdminURL", objectClass = "character",
+      desc = "URL for cbmAdmin"),
+    expectsInput(
+      objectName = "ecozones", objectClass = "data.table",
+      desc = paste("Vector, one for each stand, indicating the numeric representation",
+                   "of the Canadian ecozones, as used in CBM-CFS3"),
+      sourceURL = NA),
+    expectsInput(
+      objectName = "table3", objectClass = "data.frame",
+      desc = "Stem wood biomass model parameters for merchantable-sized trees from Boudewyn et al 2007",
+      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv"),
+    expectsInput(
+      objectName = "table3URL", objectClass = "character",
+      desc = "URL for table 3"),
+    expectsInput(
+      objectName = "table4", objectClass = "data.frame", desc = "Stem wood biomass model parameters for nonmerchantable-sized trees from Boudewyn et al 2007",
+      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv"),
+    expectsInput(
+      objectName = "table4URL", objectClass = "character",
+      desc = "URL for table 4"),
+    expectsInput(
+      objectName = "table5", objectClass = "data.frame",
+      desc = "Stem wood biomass model parameters for sapling-sized trees from Boudewyn et al. 2007.",
+      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv"),
+    expectsInput(
+      objectName = "table5URL", objectClass = "character",
+      desc = "URL for table 5"),
+    expectsInput(
+      objectName = "table6", objectClass = "data.frame",
+      desc = "Proportion model parameters from Boudewyn et al. 2007",
+      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv"),
+    expectsInput(
+      objectName = "table6URL", objectClass = "character",
+      desc = "URL for table 6"),
+    expectsInput(
+      objectName = "table7", objectClass = "data.frame",
+      desc = "Caps on proportion models from Boudewyn et al. 2007.",
+      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv"),
+    expectsInput(
+      objectName = "table7URL", objectClass = "character",
+      desc = "URL for table 7"),
+    expectsInput(
+      objectName = "canfi_species", objectClass = "data.frame",
+      desc = paste("File containing the possible species in the Boudewyn table.",
+                   "Note that if Boudewyn et al. added species, this should be updated.",
+                   "Also note that such an update is very unlikely."),
+      sourceURL = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/"),
+    expectsInput(
+      objectName = "canfi_speciesURL", objectClass = "character",
+      desc = "URL for canfi_species"),
+    expectsInput(
+      objectName = "spatialDT", objectClass = "data.table",
+      desc = "the table containing one line per pixel",
+      sourceURL = NA),
+    expectsInput(
+      objectName = "curveID", objectClass = "character",
+      desc = "Vector of column names that together, uniquely define growth curve id",
+      sourceURL = NA),
+    expectsInput(
+      objectName = "level3DT", objectClass = "data.table",
+      desc = "the table linking the spu id, with the disturbance_matrix_id and the events.",
+      "The events are the possible raster values from the disturbance rasters of Wulder and White.",
+      sourceURL = NA),
+    expectsInput(
+      objectName = "gcMeta", objectClass = "data.frame",
+      desc = paste("Provides equivalent between provincial boundaries",
+                   "CBM-id for provincial boundaries and CBM-spatial unit ids"),
+      sourceURL =
+        "https://drive.google.com/file/d/189SFlySTt0Zs6k57-PzQMuQ29LmycDmJ/view?usp=sharing"),
+    expectsInput(
+      objectName = "gcMetaURL", objectClass = "character",
+      desc = "URL for gcMeta")
   ),
   outputObjects = bindrows(
     # createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = "cumPoolsClean", objectClass = "data.table",
-                  desc = "Tonnes of carbon/ha both cumnulative and increments,
-                  for each growth curve id (in this data.table id and gcids are
-                  the same), by age and ecozone"),
-    createsOutput(objectName = "increments", objectClass = "data.table",
-                  desc = "The yearly tonnes of carbon/ha/yr for each growth,
-                  curve id by age and ecozone"),
-    createsOutput(objectName = "gcMetaAllCols",
-                  objectClass = "data.frame",
-                  desc = "`gcMeta` as above plus ecozones"),
-    createsOutput(objectName = "plotsRawCumulativeBiomass", objectClass = "plot", ## TODO invalid class
-                  desc = paste("Plot of cumulative m3/ha curves",
-                               "translated into tonnes of carbon/ha, per AG pool,
-                               prior to any smoothing")), ## TODO: not used
-    createsOutput(objectName = "growth_increments", objectClass = "matrix", desc = "Matrix of the 1/2 increment that will be used to create the `gcHash`"),
-    createsOutput(objectName = "gcHash", objectClass = "environment",
-                  desc = paste("Environment pointing to each gcID, that is itself an environment,",
-                               "pointing to each year of growth for all AG pools.Hashed matrix of the 1/2 growth increment.",
-                               "This is used in the c++ functions to increment AG pools two times in an annual event (in the CBM_core module.")),
-    createsOutput(objectName = "volCurves", objectClass = "plot", desc = "Plot of all the growth curve provided by the user")
-
+    createsOutput(
+      objectName = "volCurves", objectClass = "plot",
+      desc = "Plot of all the growth curve provided by the user"),
+    createsOutput(
+      objectName = "gcMetaAllCols", objectClass = "data.frame",
+      desc = "`gcMeta` as above plus ecozones"),
+    createsOutput(
+      objectName = "cumPoolsClean", objectClass = "data.table",
+      desc = "Tonnes of carbon/ha both cumnulative and increments,
+      for each growth curve id (in this data.table id and gcids are
+      the same), by age and ecozone"),
+    createsOutput(
+      objectName = "growth_increments", objectClass = "matrix",
+      desc = "Matrix of the 1/2 increment that will be used to create the `gcHash`")
   )
 ))
 
