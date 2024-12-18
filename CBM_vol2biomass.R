@@ -390,21 +390,19 @@ Init <- function(sim) {
   #   stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
   # }
 
-  # assuming gcMeta has now 5 columns, it needs a 7th: spatial_unit_id. This
+  # assuming gcMeta has now 6 columns, it needs a 7th: spatial_unit_id. This
   # will be used in the convertM3biom() fnct to link to the right ecozone
   # and it only needs the gc we are using in this sim.
   gcThisSim <- unique(sim$spatialDT[,.(gcids, spatial_unit_id, ecozones)])
-  #gcThisSim <- as.data.table(unique(cbind(sim$spatialUnits, sim$gcids)))
-  #names(gcThisSim) <- c("spatial_unit_id", "gcids")
   setkey(gcThisSim, gcids)
   setkey(gcMeta, gcids)
   gcMeta <- merge(gcMeta, gcThisSim)
+
   # curveID are the columns use to make the unique levels in the factor gcids.
   # These factor levels are the link between the pixelGroups and the curve to be
   # use to growth their AGB. In this case (SK) the levels of the factor need to
   # come from the gcMeta, not the level3DT. Just in case all growth curves need
   # to be processed. If sim$level3DT exist, its gcids needs to match these.
-
   curveID <- sim$curveID
   if (!is.null(sim$level3DT)) {
     gcidsLevels <- levels(sim$level3DT$gcids) ## CAMILLE DEC 2024: This didn't work for Vini's example with only 1 option. For his data I used unique(sim$level3DT$gcids)
@@ -414,12 +412,6 @@ Init <- function(sim) {
   }
 
   set(gcMeta, NULL, "gcids", gcids)
-
-  # if (!is.null(sim$level3DT)) {
-  #   gcidsLevels <- levels(gcids)
-  #   gcids <- factor(gcidsCreate(sim$levelDT[, ..curveID]), levels = gcidsLevels)
-  #  }
-
   sim$gcMetaAllCols <- gcMeta
 
   # START processing curves from m3/ha to tonnes of C/ha then to annual increments
