@@ -382,7 +382,7 @@ Init <- function(sim) {
       gcMeta3 <- merge(gcMeta2, spsMatch) # I do not think the order of the columns matter
       gcMeta <- gcMeta3
     }
-    ### PUT SOMETHING HERE IF THE SPECIES DONT MATCH...NOT SURE WHAT - ERROR MESSAGE?
+    stop("Species in gcMeta do not match with those in the canfi_species table")
   }
 
   ##TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
