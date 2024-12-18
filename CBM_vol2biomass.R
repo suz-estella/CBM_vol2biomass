@@ -287,7 +287,7 @@ Init <- function(sim) {
                                           sim$table4$ecozone %in% eco, ])
   }
 
-  abreviation <- c("PE", "QC", "ON", "MB", "SK", "YK", "NU")
+  abreviation <- c("PE", "QC", "ON", "MB", "SK", "YK", "NU", "NS")
   ## DANGER HARD CODED: if NFIS changes table 5, this will no longer be valid
   # juris_id: there are only 5/13 possible
   # these are the provinces available: AB BC NB NF NT
@@ -299,8 +299,9 @@ Init <- function(sim) {
   # "SK" - AB
   # "YK" - NT
   # "NU" - NT
+  # "NS" - NB
   if (any(thisAdmin$abreviation %in% abreviation)) {
-    t5abreviation <- c("NB", "NL", "NL", "AB", "AB", "NT", "NT")
+    t5abreviation <- c("NB", "NL", "NL", "AB", "AB", "NT", "NT", "NB")
     abreviationReplace <- data.table(abreviation, t5abreviation)
     # replace the abbreviations and select
     thisAdmin5 <- merge(abreviationReplace, thisAdmin)
