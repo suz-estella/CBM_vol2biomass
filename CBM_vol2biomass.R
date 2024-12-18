@@ -247,36 +247,47 @@ Init <- function(sim) {
 
 
   # START reducing Biomass model parameter tables -----------------------------------------------
-  # reducing the parameter tables to the jurisdiction or ecozone we have in the study area
-  ## To run module independently, the gcID used in this translation can be specified here
-  # if(!suppliedElsewhere("spatialUnits",sim)){
-  #   spu  <- ### USER TO PROVIDE SPU FOR EACH gcID###########
-  # }else{
-  ####spu <- unique(sim$spatialUnits)
-  # }
-  # if(!suppliedElsewhere("ecozones",sim)){
-  #   eco <- ### USER TO PROVIDE SPU FOR EACH gcID###########
-  # }else{
+  # not all ecozones are in tables 3-7. There may be some mismatch here.
+  # these are the ecozones in the tables
+  # id               name
+  # 4       Taiga Plains
+  # 5  Taiga Shield West
+  # 6 Boreal Shield West
+  # 7  Atlantic Maritime
+  # 9      Boreal Plains
+  # 10  Subhumid Prairies
+  # 12  Boreal Cordillera
+  # 13   Pacific Maritime
+  # 14 Montane Cordillera
+  # these are the ones that are not.
+  # id               name
+  # 8   Mixedwood Plains  - 7  Atlantic Maritime
+  # 11   Taiga Cordillera - 4 taiga plains
+  # 15      Hudson Plains - 6 Boreal Shield West
+  # 16  Taiga Shield East - 5  Taiga Shield West
+  # 17 Boreal Shield East - 6 Boreal Shield West
+  # 18  Semiarid Prairies - 10  Subhumid Prairies
 
-  ####eco <- unique(sim$ecozones)
-  # }
-  ####thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% spu & sim$cbmAdmin$EcoBoundaryID %in% eco, ]
+  ecoNotInT <- c(8, 11, 15, 16, 17, 18)
+  if (any(eco %in% ecoNotInT)) {
+    EcoBoundaryID <- c(7, 4, 6, 5, 6, 10)
+    ecoReplace <- data.table(ecoNotInT, EcoBoundaryID)
+    thisAdmin <- merge(ecoReplace, thisAdmin, by.x = "ecoNotInT", by.y = "EcoBoundaryID")
+  }
 
-  # "s" table for small table3, 4, 5, 6, 7 - tables limited to the targeted
-  # ecozones and jurisdictions
-  stable3 <- as.data.table(sim$table3[sim$table3$juris_id %in% thisAdmin$abreviation &
-    sim$table3$ecozone %in% eco, ])
-  stable4 <- as.data.table(sim$table4[sim$table4$juris_id %in% thisAdmin$abreviation &
-    sim$table4$ecozone %in% eco, ])
+  if (any(eco %in% ecoNotInT)) {
+    stable3 <- as.data.table(sim$table3[sim$table3$juris_id %in% thisAdmin$abreviation &
+                                          sim$table3$ecozone %in% thisAdmin$EcoBoundaryID, ])
+    stable4 <- as.data.table(sim$table4[sim$table4$juris_id %in% thisAdmin$abreviation &
+                                          sim$table4$ecozone %in% thisAdmin$EcoBoundaryID, ])
+  } else {
+    stable3 <- as.data.table(sim$table3[sim$table3$juris_id %in% thisAdmin$abreviation &
+                                          sim$table3$ecozone %in% eco, ])
+    stable4 <- as.data.table(sim$table4[sim$table4$juris_id %in% thisAdmin$abreviation &
+                                          sim$table4$ecozone %in% eco, ])
+  }
 
-   # table5 is different since there was not have enough data to fit models for
-  # all provinces.
-  # unique(sim$table5$juris_id)
-  # [1] "AB" "BC" "NB" "NL" "NT"
-  # Here we are hard-coding the closest equivalent province to
-  # have a complete set.
-  # This first If-statement is to catch the "no-province" match
-  stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin$abreviation, ])
+  abreviation <- c("PE", "QC", "ON", "MB", "SK", "YK", "NU")
   ## DANGER HARD CODED: if NFIS changes table 5, this will no longer be valid
   # juris_id: there are only 5/13 possible
   # these are the provinces available: AB BC NB NF NT
@@ -288,20 +299,22 @@ Init <- function(sim) {
   # "SK" - AB
   # "YK" - NT
   # "NU" - NT
-  abreviation <- c("PE", "QC", "ON", "MB", "SK", "YK", "NU")
-
   if (any(thisAdmin$abreviation %in% abreviation)) {
-    t5abreviation <- c("NB", "NB", "NB", "AB", "AB", "NT", "NT")
+    t5abreviation <- c("NB", "NL", "NL", "AB", "AB", "NT", "NT")
     abreviationReplace <- data.table(abreviation, t5abreviation)
     # replace the abbreviations and select
     thisAdmin5 <- merge(abreviationReplace, thisAdmin)
     thisAdmin5[, c("abreviation", "t5abreviation") := list(t5abreviation, NULL)]
     stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin5$abreviation, ])
+    stable5 <- stable5.2[ecozone %in% thisAdmin$EcoBoundaryID, ]
+  } else {
+    stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin$abreviation, ])
+    stable5 <- stable5.2[ecozone %in% thisAdmin$EcoBoundaryID, ]
   }
   # This second "if-statement" is to catch is the "no-ecozone" match
   ### THIS NEEDS TO BE TESTED
   if (nrow(stable5.2) > 0) {
-    stable5 <- stable5.2[ecozone %in% eco, ]
+    stable5 <- stable5.2[ecozone %in% thisAdmin$EcoBoundaryID, ]
   } else {
     stop(
       "There are no matches found for the parameters needed to execute the Boudewyn models.",
@@ -309,44 +322,22 @@ Init <- function(sim) {
     )
   }
 
-  # there are 12/15 ecozones in table5. Once you narrow the table to admin
-  # abreviation (which is done above), there might be more mismatch. This
-  # solution only works for SK.
-  # These are the ones in table5
-  # id               name
-  # 4       Taiga Plains
-  # 5  Taiga Shield West
-  # 6 Boreal Shield West
-  # 7  Atlantic Maritime
-  # 9      Boreal Plains
-  # 10  Subhumid Prairies
-  # 12  Boreal Cordillera
-  # 13   Pacific Maritime
-  # 14 Montane Cordillera
-
-  # these are the ones that are not
-  # id               name
-  # 8   Mixedwood Plains  - 7  Atlantic Maritime
-  # 11   Taiga Cordillera - 4 taiga plains
-  # 15      Hudson Plains - 6 Boreal Shield West
-  # 16  Taiga Shield East - 5  Taiga Shield West
-  # 17 Boreal Shield East - 6 Boreal Shield West
-  # 18  Semiarid Prairies - 10  Subhumid Prairies
-  ecoNotInT5 <- c(8, 11, 15, 16, 17, 18)
-  if (any(eco %in% ecoNotInT5)) {
-    EcoBoundaryID <- c(7, 4, 6, 5, 6, 10)
-    ecoReplace <- data.table(ecoNotInT5, EcoBoundaryID)
-    thisAdmin5.1 <- merge(ecoReplace, thisAdmin5, by = "EcoBoundaryID")
-    stable5 <- as.data.table(stable5[stable5$ecozone %in% thisAdmin5.1$EcoBoundaryID, ])
-  }
   if (nrow(stable5) < 1) {
     stop("There is a problem finding a parameter match in table 5.")
   }
 
-  stable6 <- as.data.table(sim$table6[sim$table6$juris_id %in% thisAdmin$abreviation &
-    sim$table6$ecozone %in% eco, ])
-  stable7 <- as.data.table(sim$table7[sim$table7$juris_id %in% thisAdmin$abreviation &
-    sim$table6$ecozone %in% eco, ])
+  if (any(eco %in% ecoNotInT)) {
+    stable6 <- as.data.table(sim$table6[sim$table6$juris_id %in% thisAdmin$abreviation &
+                                          sim$table6$ecozone %in% thisAdmin$EcoBoundaryID, ])
+    stable7 <- as.data.table(sim$table7[sim$table7$juris_id %in% thisAdmin$abreviation &
+                                          sim$table7$ecozone %in% thisAdmin$EcoBoundaryID, ])
+  } else {
+    stable6 <- as.data.table(sim$table6[sim$table6$juris_id %in% thisAdmin$abreviation &
+                                          sim$table6$ecozone %in% eco, ])
+    stable7 <- as.data.table(sim$table7[sim$table7$juris_id %in% thisAdmin$abreviation &
+                                          sim$table7$ecozone %in% eco, ])
+  }
+
   # END reducing Biomass model parameter tables -----------------------------------------------
 
   ##NOTES: lines below are old (spadesCBM-C++). We need to find a generic way to
@@ -415,7 +406,7 @@ Init <- function(sim) {
 
   curveID <- sim$curveID
   if (!is.null(sim$level3DT)) {
-    gcidsLevels <- levels(sim$level3DT$gcids)
+    gcidsLevels <- levels(sim$level3DT$gcids) ## CAMILLE DEC 2024: This didn't work for Vini's example with only 1 option. For his data I used unique(sim$level3DT$gcids)
     gcids <- factor(gcidsCreate(gcMeta[, ..curveID]), levels = gcidsLevels)
   } else {
     gcids <- factor(gcidsCreate(gcMeta[, ..curveID]))
@@ -505,6 +496,7 @@ Init <- function(sim) {
   birchColsChg <- c("fol", "other")
   ##TODO this (which curve to replace the wonky ones with) will have to be
   ##decided by the user after they look at all the curves.
+  if(any(cumPoolsRaw$gcids == 37 | cumPoolsRaw$gcids == 58)) {
   if (any(cumPoolsRaw$gcids == 55)) {
     cumPoolsRaw[gcids %in% birchGcIds, fol := rep(cumPoolsRaw[gcids == 55, fol],length(birchGcIds))]
     cumPoolsRaw[gcids %in% birchGcIds, other := rep(cumPoolsRaw[gcids == 55, other],length(birchGcIds))]
@@ -521,6 +513,7 @@ Init <- function(sim) {
     setorderv(gc55raw, c("gcids", "age"))
     cumPoolsRaw[gcids %in% birchGcIds,fol := gc55raw[, fol]]
     cumPoolsRaw[gcids %in% birchGcIds,other := gc55raw[, other]]
+  }
   }
 
   cumPoolsClean <- cumPoolsSmooth(cumPoolsRaw) ##TODO Caching seems to produce an error.
