@@ -829,7 +829,7 @@ plotFun <- function(sim) {
   }else{
 
     message("User has not supplied growth curves ('userGcM3' or 'userGcM3URL'). ",
-            "Defaults for Saskatchen will be used.")
+            "Defaults for Saskatchewan will be used.")
 
     sim$userGcM3 <- prepInputs(url = extractURL("userGcM3"),
                                destinationPath = inputPath(sim),
