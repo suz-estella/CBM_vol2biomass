@@ -341,25 +341,16 @@ Init <- function(sim) {
 
   # END reducing Biomass model parameter tables -----------------------------------------------
 
-  ##NOTES: lines below are old (spadesCBM-C++). We need to find a generic way to
-  ##deal with getting the gcids, associated with sim$canfi_species. Note that
-  ##sim$canfi_species has a column that identifies forest_type_id. forest_type_id
-  ##1 = sw, 2 = mixedwood (that we will currently treat as hw because this
-  ##designation changes the calculation of the fine roots and disturbance
-  ##matrices, and 3 = hw).
-  ##These are the old lines:
+
   # Read-in user provided meta data for growth curves. This could be a complete
   # data frame with the same columns as gcMetaEg.csv OR is could be only curve
   # id and species.
-  ##TODO start from gcids and species that comes from CBM_dataPrep_XX and match
-  ##to the canfi_species (expectedInputs from URL). Right now just modifying
-  ##gcMeta read-in as the SK example.
   gcMeta <- sim$gcMeta
   ##TODO have to insert some sort of check of gcMeta.
 
-  # checking how many columns in gcMeta, if not 6, columns need to be added
+  # checking how many columns in gcMeta, if not 5, columns need to be added
   if (!ncol(gcMeta) == 5) {
-    # help the user go from their growth curve id and leading species to the six
+    # help the user go from their growth curve id and leading species to the five
     # columns: names(gcMeta)
     # [1] "gcids" "species" "canfi_species" "genus" "forest_type_id"
     # the data frame canfi_species.csv (in userData_Defaults_spadesCBM -
@@ -382,29 +373,29 @@ Init <- function(sim) {
       gcMeta3 <- merge(gcMeta2, spsMatch) # I do not think the order of the columns matter
       gcMeta <- gcMeta3
     }
-    ### PUT SOMETHING HERE IF THE SPECIES DONT MATCH...NOT SURE WHAT - ERROR MESSAGE?
+    stop("Species in gcMeta do not match with those in the canfi_species table")
   }
 
   ##TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
-  # if (!unique(unique(userGcM3$gcids) == unique(gcMeta$gcids))) {
-  #   stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
-  # }
+  #
+  setkey(gcMeta, gcids)
+  if (!unique(unique(userGcM3$gcids) == unique(gcMeta$gcids))) {
+    stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
+  }
 
-  # assuming gcMeta has now 5 columns, it needs a 7th: spatial_unit_id. This
+  # assuming gcMeta has now 5 columns, it needs 2 more: spatial_unit_id and ecozone. This
   # will be used in the convertM3biom() fnct to link to the right ecozone
   # and it only needs the gc we are using in this sim.
   gcThisSim <- unique(sim$spatialDT[,.(gcids, spatial_unit_id, ecozones)])
-  #gcThisSim <- as.data.table(unique(cbind(sim$spatialUnits, sim$gcids)))
-  #names(gcThisSim) <- c("spatial_unit_id", "gcids")
   setkey(gcThisSim, gcids)
   setkey(gcMeta, gcids)
   gcMeta <- merge(gcMeta, gcThisSim)
+
   # curveID are the columns use to make the unique levels in the factor gcids.
   # These factor levels are the link between the pixelGroups and the curve to be
   # use to growth their AGB. In this case (SK) the levels of the factor need to
   # come from the gcMeta, not the level3DT. Just in case all growth curves need
   # to be processed. If sim$level3DT exist, its gcids needs to match these.
-
   curveID <- sim$curveID
   if (!is.null(sim$level3DT)) {
     gcidsLevels <- levels(sim$level3DT$gcids) ## CAMILLE DEC 2024: This didn't work for Vini's example with only 1 option. For his data I used unique(sim$level3DT$gcids)
@@ -414,12 +405,6 @@ Init <- function(sim) {
   }
 
   set(gcMeta, NULL, "gcids", gcids)
-
-  # if (!is.null(sim$level3DT)) {
-  #   gcidsLevels <- levels(gcids)
-  #   gcids <- factor(gcidsCreate(sim$levelDT[, ..curveID]), levels = gcidsLevels)
-  #  }
-
   sim$gcMetaAllCols <- gcMeta
 
   # START processing curves from m3/ha to tonnes of C/ha then to annual increments
