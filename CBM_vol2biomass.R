@@ -622,23 +622,23 @@ plotFun <- function(sim) {
   # dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   # message(currentModule(sim), ": using dataPath '", dPath, "'.")
 
-  # if (!suppliedElsewhere("gcids", sim)) {
-  #   ## this is where the pixelGroups and their spu eco etc.
-  #   message("No spatial information was provided for the growth curves.
-  #           The default values (SK simulations) will be used to limit the number of growth curves used.")
-  #   sim$gcids <- gcidsSK
-  # }
-  #
-  # if (!suppliedElsewhere("ecozones", sim)) {
-  #   message("No spatial information was provided for the growth curves.
-  #           The default values (SK simulations) will be used to determine which ecozones these curves are in.")
-  #   sim$ecozones <- ecozonesSK
-  # }
-  # if (!suppliedElsewhere("spatialUnits", sim)) {
-  #   message("No spatial information was provided for the growth curves.
-  #           The default values (SK simulations) will be used to determine which CBM-spatial units these curves are in.")
-  #   sim$spatialUnits <- spatialUnitsSK
-  # }
+  if (!suppliedElsewhere("gcids", sim)) {
+    ## this is where the pixelGroups and their spu eco etc.
+    message("No spatial information was provided for the growth curves.
+            The default values (SK simulations) will be used to limit the number of growth curves used.")
+    sim$gcids <- gcidsSK
+  }
+
+  if (!suppliedElsewhere("ecozones", sim)) {
+    message("No spatial information was provided for the growth curves.
+            The default values (SK simulations) will be used to determine which ecozones these curves are in.")
+    sim$ecozones <- ecozonesSK
+  }
+  if (!suppliedElsewhere("spatialUnits", sim)) {
+    message("No spatial information was provided for the growth curves.
+            The default values (SK simulations) will be used to determine which CBM-spatial units these curves are in.")
+    sim$spatialUnits <- spatialUnitsSK
+  }
 
   # Growth and yield
   ## TODO add a data manipulation to adjust if the m3 are not given on a yearly basis.
