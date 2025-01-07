@@ -693,16 +693,6 @@ plotFun <- function(sim) {
     sim$table3 <- prepInputs(url = sim$table3URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-
-  #
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   # these are the columns needed in the functions for calculating biomass
-  #   t3hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species", "a", "b", "volm")
-  #   if (length(which(colnames(sim$table3) %in% t3hasToHave)) != length(t3hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table3) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
   if (!suppliedElsewhere("table4", sim)) {
@@ -712,15 +702,6 @@ plotFun <- function(sim) {
     sim$table4 <- prepInputs(url = sim$table4URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t4hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
-  #                     "a", "b", "k", "cap", "volm")
-  #   if (!length(which(colnames(sim$table4) %in% t4hasToHave)) == length(t4hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table4) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
 
@@ -731,14 +712,6 @@ plotFun <- function(sim) {
     sim$table5 <- prepInputs(url = sim$table5URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-  #
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t5hasToHave <- c("juris_id", "ecozone", "canfi_genus", "genus", "a", "b", "k", "cap", "volm")
-  #   if (!length(which(colnames(sim$table5) %in% t5hasToHave)) == length(t5hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table5) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
 
@@ -749,15 +722,6 @@ plotFun <- function(sim) {
     sim$table6 <- prepInputs(url = sim$table6URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-  #
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t6hasToHave <- c("juris_id", "ecozone", "canfi_species", "a1", "a2", "a3", "b1", "b2", "b3",
-  #                    "c1", "c2", "c3" )
-  #   if (!length(which(colnames(sim$table6) %in% t6hasToHave)) == length(t6hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table6) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
   if (!suppliedElsewhere("table7", sim)) {
@@ -767,16 +731,6 @@ plotFun <- function(sim) {
     sim$table7 <- prepInputs(url = sim$table7URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t7hasToHave <- c("juris_id", "ecozone", "canfi_species", "vol_min", "vol_max", "p_sw_low",
-  #                    "p_sb_low", "p_br_low", "p_fl_low", "p_sw_high", "p_sb_high", "p_br_high",
-  #                    "p_fl_high")
-  #   if (length(which(colnames(sim$table7) %in% t7hasToHave)) != length(t7hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table7) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
 
