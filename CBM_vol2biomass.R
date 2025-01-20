@@ -54,139 +54,114 @@ defineModule(sim, list(
     # expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     # this are variables in inputed data.tables:SpatialUnitID, EcoBoundaryID, juris_id, ecozone, jur, eco, name, gcids, plotsRawCumulativeBiomass, checkInc
     expectsInput(
-      objectName = "curveID", objectClass = "character",
-      desc = "Vector of column names that together, uniquely define growth curve id",
-      sourceURL = NA
-    ),
-    expectsInput(
-      objectName = "table3URL", objectClass = "character",
-      desc = "URL for table 3"
-    ),
-    expectsInput(
-      objectName = "table3", objectClass = "data.frame",
-      desc = "Stem wood biomass model parameters for merchantable-sized trees from Boudewyn et al 2007",
-      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv"
-    ),
-    expectsInput(
-      objectName = "table4URL", objectClass = "character",
-      desc = "URL for table 4"
-    ),
-    expectsInput(
-      objectName = "table4", objectClass = "data.frame", desc = "Stem wood biomass model parameters for nonmerchantable-sized trees from Boudewyn et al 2007",
-      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv"
-    ),
-    expectsInput(
-      objectName = "table5URL", objectClass = "character",
-      desc = "URL for table 5"
-    ),
-    expectsInput(
-      objectName = "table5", objectClass = "data.frame",
-      desc = "Stem wood biomass model parameters for sapling-sized trees from Boudewyn et al. 2007.",
-      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv"
-    ),
-    expectsInput(
-      objectName = "table6URL", objectClass = "character",
-      desc = "URL for table 6"
-    ),
-    expectsInput(
-      objectName = "table6", objectClass = "data.frame",
-      desc = "Proportion model parameters from Boudewyn et al. 2007",
-      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv"
-    ),
-    expectsInput(
-      objectName = "table7URL", objectClass = "character",
-      desc = "URL for table 7"
-    ),
-    expectsInput(
-      objectName = "table7", objectClass = "data.frame",
-      desc = "Caps on proportion models from Boudewyn et al. 2007.",
-      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv"
-    ),
-    expectsInput(
-      objectName = "cbmAdmin", objectClass = "data.frame",
-      desc = paste("Provides equivalent between provincial boundaries,",
-                   "CBM-id for provincial boundaries and CBM-spatial unit ids"),
-      sourceURL = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz"
-    ),
-    expectsInput(
-      objectName = "gcMetaURL", objectClass = "character",
-      desc = "URL for gcMeta"
-    ),
-    expectsInput(
-      objectName = "gcMeta", objectClass = "data.frame",
-      desc = paste("Provides equivalent between provincial boundaries",
-                   "CBM-id for provincial boundaries and CBM-spatial unit ids"),
-      sourceURL =
-        "https://drive.google.com/file/d/189SFlySTt0Zs6k57-PzQMuQ29LmycDmJ/view?usp=sharing"
-    ),
-    expectsInput(
-      objectName = "gcMetaFile", objectClass = "character",
-      desc = "File name and location for the user provided `gcMeta` data.frame",
-      sourceURL = NA
-    ),
-    expectsInput(
-      objectName = "canfi_speciesURL", objectClass = "character",
-      desc = "URL for canfi_species"
-    ),
-    expectsInput(
-      objectName = "canfi_species", objectClass = "data.frame",
-      desc = paste("File containing the possible species in the Boudewyn table.",
-                   "Note that if Boudewyn et al. added species, this should be updated.",
-                   "Also note that such an update is very unlikely."),
-      sourceURL = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/"
-    ),
-    expectsInput(
       objectName = "userGcM3URL", objectClass = "character",
-      desc = "URL for userGcM3"
-    ),
+      desc = "URL for userGcM3"),
     expectsInput(
       objectName = "userGcM3", objectClass = "data.frame",
       desc = paste("User file containing:",
                    "`gcids`, `Age`, `MerchVolume`.",
                    "Default name `userGcM3`."),
-      sourceURL = "https://drive.google.com/file/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m"
-    ),
-    expectsInput(
-      objectName = "ecozones", objectClass = "data.table",
-      desc = paste("Vector, one for each stand, indicating the numeric representation",
-                   "of the Canadian ecozones, as used in CBM-CFS3"),
-      sourceURL = NA
-    ),
-    expectsInput(
-      objectName = "gcids", objectClass = "data.table",
-      desc = "The identification of which growth curves to use on the specific stands provided by the user.",
-      sourceURL = NA
-    ),
+      sourceURL = "https://drive.google.com/file/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m"),
     expectsInput(
       objectName = "spatialUnits", objectClass = "data.table",
       desc = paste("the table linking the spu id, with the `disturbance_matrix_id` and the events.",
                    "The events are the possible raster values from the disturbance rasters of Wulder and White."),
-      sourceURL = NA
-    )
+      sourceURL = NA),
+    expectsInput(
+      objectName = "cbmAdmin", objectClass = "data.frame",
+      desc = paste("Provides equivalent between provincial boundaries,",
+                   "CBM-id for provincial boundaries and CBM-spatial unit ids"),
+      sourceURL = "https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz"),
+    expectsInput(
+      objectName = "cbmAdminURL", objectClass = "character",
+      desc = "URL for cbmAdmin"),
+    expectsInput(
+      objectName = "ecozones", objectClass = "data.table",
+      desc = paste("Vector, one for each stand, indicating the numeric representation",
+                   "of the Canadian ecozones, as used in CBM-CFS3"),
+      sourceURL = NA),
+    expectsInput(
+      objectName = "table3", objectClass = "data.frame",
+      desc = "Stem wood biomass model parameters for merchantable-sized trees from Boudewyn et al 2007",
+      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv"),
+    expectsInput(
+      objectName = "table3URL", objectClass = "character",
+      desc = "URL for table 3"),
+    expectsInput(
+      objectName = "table4", objectClass = "data.frame", desc = "Stem wood biomass model parameters for nonmerchantable-sized trees from Boudewyn et al 2007",
+      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv"),
+    expectsInput(
+      objectName = "table4URL", objectClass = "character",
+      desc = "URL for table 4"),
+    expectsInput(
+      objectName = "table5", objectClass = "data.frame",
+      desc = "Stem wood biomass model parameters for sapling-sized trees from Boudewyn et al. 2007.",
+      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv"),
+    expectsInput(
+      objectName = "table5URL", objectClass = "character",
+      desc = "URL for table 5"),
+    expectsInput(
+      objectName = "table6", objectClass = "data.frame",
+      desc = "Proportion model parameters from Boudewyn et al. 2007",
+      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv"),
+    expectsInput(
+      objectName = "table6URL", objectClass = "character",
+      desc = "URL for table 6"),
+    expectsInput(
+      objectName = "table7", objectClass = "data.frame",
+      desc = "Caps on proportion models from Boudewyn et al. 2007.",
+      sourceURL = "https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv"),
+    expectsInput(
+      objectName = "table7URL", objectClass = "character",
+      desc = "URL for table 7"),
+    expectsInput(
+      objectName = "canfi_species", objectClass = "data.frame",
+      desc = paste("File containing the possible species in the Boudewyn table.",
+                   "Note that if Boudewyn et al. added species, this should be updated.",
+                   "Also note that such an update is very unlikely."),
+      sourceURL = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/"),
+    expectsInput(
+      objectName = "canfi_speciesURL", objectClass = "character",
+      desc = "URL for canfi_species"),
+    expectsInput(
+      objectName = "spatialDT", objectClass = "data.table",
+      desc = "the table containing one line per pixel",
+      sourceURL = NA),
+    expectsInput(
+      objectName = "curveID", objectClass = "character",
+      desc = "Vector of column names that together, uniquely define growth curve id",
+      sourceURL = NA),
+    expectsInput(
+      objectName = "level3DT", objectClass = "data.table",
+      desc = "the table linking the spu id, with the disturbance_matrix_id and the events.",
+      "The events are the possible raster values from the disturbance rasters of Wulder and White.",
+      sourceURL = NA),
+    expectsInput(
+      objectName = "gcMeta", objectClass = "data.frame",
+      desc = paste("Provides equivalent between provincial boundaries",
+                   "CBM-id for provincial boundaries and CBM-spatial unit ids"),
+      sourceURL =
+        "https://drive.google.com/file/d/189SFlySTt0Zs6k57-PzQMuQ29LmycDmJ/view?usp=sharing"),
+    expectsInput(
+      objectName = "gcMetaURL", objectClass = "character",
+      desc = "URL for gcMeta")
   ),
   outputObjects = bindrows(
     # createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = "cumPoolsClean", objectClass = "data.table",
-                  desc = "Tonnes of carbon/ha both cumnulative and increments,
-                  for each growth curve id (in this data.table id and gcids are
-                  the same), by age and ecozone"),
-    createsOutput(objectName = "increments", objectClass = "data.table",
-                  desc = "The yearly tonnes of carbon/ha/yr for each growth,
-                  curve id by age and ecozone"),
-    createsOutput(objectName = "gcMetaAllCols",
-                  objectClass = "data.frame",
-                  desc = "`gcMeta` as above plus ecozones"),
-    createsOutput(objectName = "plotsRawCumulativeBiomass", objectClass = "plot", ## TODO invalid class
-                  desc = paste("Plot of cumulative m3/ha curves",
-                               "translated into tonnes of carbon/ha, per AG pool,
-                               prior to any smoothing")), ## TODO: not used
-    createsOutput(objectName = "growth_increments", objectClass = "matrix", desc = "Matrix of the 1/2 increment that will be used to create the `gcHash`"),
-    createsOutput(objectName = "gcHash", objectClass = "environment",
-                  desc = paste("Environment pointing to each gcID, that is itself an environment,",
-                               "pointing to each year of growth for all AG pools.Hashed matrix of the 1/2 growth increment.",
-                               "This is used in the c++ functions to increment AG pools two times in an annual event (in the CBM_core module.")),
-    createsOutput(objectName = "volCurves", objectClass = "plot", desc = "Plot of all the growth curve provided by the user")
-
+    createsOutput(
+      objectName = "volCurves", objectClass = "plot",
+      desc = "Plot of all the growth curve provided by the user"),
+    createsOutput(
+      objectName = "gcMetaAllCols", objectClass = "data.frame",
+      desc = "`gcMeta` as above plus ecozones"),
+    createsOutput(
+      objectName = "cumPoolsClean", objectClass = "data.table",
+      desc = "Tonnes of carbon/ha both cumnulative and increments,
+      for each growth curve id (in this data.table id and gcids are
+      the same), by age and ecozone"),
+    createsOutput(
+      objectName = "growth_increments", objectClass = "matrix",
+      desc = "Matrix of the 1/2 increment that will be used to create the `gcHash`")
   )
 ))
 
@@ -272,36 +247,47 @@ Init <- function(sim) {
 
 
   # START reducing Biomass model parameter tables -----------------------------------------------
-  # reducing the parameter tables to the jurisdiction or ecozone we have in the study area
-  ## To run module independently, the gcID used in this translation can be specified here
-  # if(!suppliedElsewhere("spatialUnits",sim)){
-  #   spu  <- ### USER TO PROVIDE SPU FOR EACH gcID###########
-  # }else{
-  ####spu <- unique(sim$spatialUnits)
-  # }
-  # if(!suppliedElsewhere("ecozones",sim)){
-  #   eco <- ### USER TO PROVIDE SPU FOR EACH gcID###########
-  # }else{
+  # not all ecozones are in tables 3-7. There may be some mismatch here.
+  # these are the ecozones in the tables
+  # id               name
+  # 4       Taiga Plains
+  # 5  Taiga Shield West
+  # 6 Boreal Shield West
+  # 7  Atlantic Maritime
+  # 9      Boreal Plains
+  # 10  Subhumid Prairies
+  # 12  Boreal Cordillera
+  # 13   Pacific Maritime
+  # 14 Montane Cordillera
+  # these are the ones that are not.
+  # id               name
+  # 8   Mixedwood Plains  - 7  Atlantic Maritime
+  # 11   Taiga Cordillera - 4 taiga plains
+  # 15      Hudson Plains - 6 Boreal Shield West
+  # 16  Taiga Shield East - 5  Taiga Shield West
+  # 17 Boreal Shield East - 6 Boreal Shield West
+  # 18  Semiarid Prairies - 10  Subhumid Prairies
 
-  ####eco <- unique(sim$ecozones)
-  # }
-  ####thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% spu & sim$cbmAdmin$EcoBoundaryID %in% eco, ]
+  ecoNotInT <- c(8, 11, 15, 16, 17, 18)
+  if (any(eco %in% ecoNotInT)) {
+    EcoBoundaryID <- c(7, 4, 6, 5, 6, 10)
+    ecoReplace <- data.table(ecoNotInT, EcoBoundaryID)
+    thisAdmin <- merge(ecoReplace, thisAdmin, by.x = "ecoNotInT", by.y = "EcoBoundaryID")
+  }
 
-  # "s" table for small table3, 4, 5, 6, 7 - tables limited to the targeted
-  # ecozones and jurisdictions
-  stable3 <- as.data.table(sim$table3[sim$table3$juris_id %in% thisAdmin$abreviation &
-    sim$table3$ecozone %in% eco, ])
-  stable4 <- as.data.table(sim$table4[sim$table4$juris_id %in% thisAdmin$abreviation &
-    sim$table4$ecozone %in% eco, ])
+  if (any(eco %in% ecoNotInT)) {
+    stable3 <- as.data.table(sim$table3[sim$table3$juris_id %in% thisAdmin$abreviation &
+                                          sim$table3$ecozone %in% thisAdmin$EcoBoundaryID, ])
+    stable4 <- as.data.table(sim$table4[sim$table4$juris_id %in% thisAdmin$abreviation &
+                                          sim$table4$ecozone %in% thisAdmin$EcoBoundaryID, ])
+  } else {
+    stable3 <- as.data.table(sim$table3[sim$table3$juris_id %in% thisAdmin$abreviation &
+                                          sim$table3$ecozone %in% eco, ])
+    stable4 <- as.data.table(sim$table4[sim$table4$juris_id %in% thisAdmin$abreviation &
+                                          sim$table4$ecozone %in% eco, ])
+  }
 
-   # table5 is different since there was not have enough data to fit models for
-  # all provinces.
-  # unique(sim$table5$juris_id)
-  # [1] "AB" "BC" "NB" "NL" "NT"
-  # Here we are hard-coding the closest equivalent province to
-  # have a complete set.
-  # This first If-statement is to catch the "no-province" match
-  stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin$abreviation, ])
+  abreviation <- c("PE", "QC", "ON", "MB", "SK", "YK", "NU", "NS")
   ## DANGER HARD CODED: if NFIS changes table 5, this will no longer be valid
   # juris_id: there are only 5/13 possible
   # these are the provinces available: AB BC NB NF NT
@@ -313,20 +299,23 @@ Init <- function(sim) {
   # "SK" - AB
   # "YK" - NT
   # "NU" - NT
-  abreviation <- c("PE", "QC", "ON", "MB", "SK", "YK", "NU")
-
+  # "NS" - NB
   if (any(thisAdmin$abreviation %in% abreviation)) {
-    t5abreviation <- c("NB", "NB", "NB", "AB", "AB", "NT", "NT")
+    t5abreviation <- c("NB", "NL", "NL", "AB", "AB", "NT", "NT", "NB")
     abreviationReplace <- data.table(abreviation, t5abreviation)
     # replace the abbreviations and select
     thisAdmin5 <- merge(abreviationReplace, thisAdmin)
     thisAdmin5[, c("abreviation", "t5abreviation") := list(t5abreviation, NULL)]
     stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin5$abreviation, ])
+    stable5 <- stable5.2[ecozone %in% thisAdmin$EcoBoundaryID, ]
+  } else {
+    stable5.2 <- as.data.table(sim$table5[sim$table5$juris_id %in% thisAdmin$abreviation, ])
+    stable5 <- stable5.2[ecozone %in% thisAdmin$EcoBoundaryID, ]
   }
   # This second "if-statement" is to catch is the "no-ecozone" match
   ### THIS NEEDS TO BE TESTED
   if (nrow(stable5.2) > 0) {
-    stable5 <- stable5.2[ecozone %in% eco, ]
+    stable5 <- stable5.2[ecozone %in% thisAdmin$EcoBoundaryID, ]
   } else {
     stop(
       "There are no matches found for the parameters needed to execute the Boudewyn models.",
@@ -334,65 +323,34 @@ Init <- function(sim) {
     )
   }
 
-  # there are 12/15 ecozones in table5. Once you narrow the table to admin
-  # abreviation (which is done above), there might be more mismatch. This
-  # solution only works for SK.
-  # These are the ones in table5
-  # id               name
-  # 4       Taiga Plains
-  # 5  Taiga Shield West
-  # 6 Boreal Shield West
-  # 7  Atlantic Maritime
-  # 9      Boreal Plains
-  # 10  Subhumid Prairies
-  # 12  Boreal Cordillera
-  # 13   Pacific Maritime
-  # 14 Montane Cordillera
-
-  # these are the ones that are not
-  # id               name
-  # 8   Mixedwood Plains  - 7  Atlantic Maritime
-  # 11   Taiga Cordillera - 4 taiga plains
-  # 15      Hudson Plains - 6 Boreal Shield West
-  # 16  Taiga Shield East - 5  Taiga Shield West
-  # 17 Boreal Shield East - 6 Boreal Shield West
-  # 18  Semiarid Prairies - 10  Subhumid Prairies
-  ecoNotInT5 <- c(8, 11, 15, 16, 17, 18)
-  if (any(eco %in% ecoNotInT5)) {
-    EcoBoundaryID <- c(7, 4, 6, 5, 6, 10)
-    ecoReplace <- data.table(ecoNotInT5, EcoBoundaryID)
-    thisAdmin5.1 <- merge(ecoReplace, thisAdmin5, by = "EcoBoundaryID")
-    stable5 <- as.data.table(stable5[stable5$ecozone %in% thisAdmin5.1$EcoBoundaryID, ])
-  }
   if (nrow(stable5) < 1) {
     stop("There is a problem finding a parameter match in table 5.")
   }
 
-  stable6 <- as.data.table(sim$table6[sim$table6$juris_id %in% thisAdmin$abreviation &
-    sim$table6$ecozone %in% eco, ])
-  stable7 <- as.data.table(sim$table7[sim$table7$juris_id %in% thisAdmin$abreviation &
-    sim$table6$ecozone %in% eco, ])
+  if (any(eco %in% ecoNotInT)) {
+    stable6 <- as.data.table(sim$table6[sim$table6$juris_id %in% thisAdmin$abreviation &
+                                          sim$table6$ecozone %in% thisAdmin$EcoBoundaryID, ])
+    stable7 <- as.data.table(sim$table7[sim$table7$juris_id %in% thisAdmin$abreviation &
+                                          sim$table7$ecozone %in% thisAdmin$EcoBoundaryID, ])
+  } else {
+    stable6 <- as.data.table(sim$table6[sim$table6$juris_id %in% thisAdmin$abreviation &
+                                          sim$table6$ecozone %in% eco, ])
+    stable7 <- as.data.table(sim$table7[sim$table7$juris_id %in% thisAdmin$abreviation &
+                                          sim$table7$ecozone %in% eco, ])
+  }
+
   # END reducing Biomass model parameter tables -----------------------------------------------
 
-  ##NOTES: lines below are old (spadesCBM-C++). We need to find a generic way to
-  ##deal with getting the gcids, associated with sim$canfi_species. Note that
-  ##sim$canfi_species has a column that identifies forest_type_id. forest_type_id
-  ##1 = sw, 2 = mixedwood (that we will currently treat as hw because this
-  ##designation changes the calculation of the fine roots and disturbance
-  ##matrices, and 3 = hw).
-  ##These are the old lines:
+
   # Read-in user provided meta data for growth curves. This could be a complete
   # data frame with the same columns as gcMetaEg.csv OR is could be only curve
   # id and species.
-  ##TODO start from gcids and species that comes from CBM_dataPrep_XX and match
-  ##to the canfi_species (expectedInputs from URL). Right now just modifying
-  ##gcMeta read-in as the SK example.
   gcMeta <- sim$gcMeta
   ##TODO have to insert some sort of check of gcMeta.
 
-  # checking how many columns in gcMeta, if not 6, columns need to be added
+  # checking how many columns in gcMeta, if not 5, columns need to be added
   if (!ncol(gcMeta) == 5) {
-    # help the user go from their growth curve id and leading species to the six
+    # help the user go from their growth curve id and leading species to the five
     # columns: names(gcMeta)
     # [1] "gcids" "species" "canfi_species" "genus" "forest_type_id"
     # the data frame canfi_species.csv (in userData_Defaults_spadesCBM -
@@ -415,44 +373,38 @@ Init <- function(sim) {
       gcMeta3 <- merge(gcMeta2, spsMatch) # I do not think the order of the columns matter
       gcMeta <- gcMeta3
     }
-    ### PUT SOMETHING HERE IF THE SPECIES DONT MATCH...NOT SURE WHAT - ERROR MESSAGE?
+    stop("Species in gcMeta do not match with those in the canfi_species table")
   }
 
   ##TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
-  # if (!unique(unique(userGcM3$gcids) == unique(gcMeta$gcids))) {
-  #   stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
-  # }
+  #
+  setkey(gcMeta, gcids)
+  if (!unique(unique(userGcM3$gcids) == unique(gcMeta$gcids))) {
+    stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
+  }
 
-  # assuming gcMeta has now 5 columns, it needs a 7th: spatial_unit_id. This
+  # assuming gcMeta has now 5 columns, it needs 2 more: spatial_unit_id and ecozone. This
   # will be used in the convertM3biom() fnct to link to the right ecozone
   # and it only needs the gc we are using in this sim.
   gcThisSim <- unique(sim$spatialDT[,.(gcids, spatial_unit_id, ecozones)])
-  #gcThisSim <- as.data.table(unique(cbind(sim$spatialUnits, sim$gcids)))
-  #names(gcThisSim) <- c("spatial_unit_id", "gcids")
   setkey(gcThisSim, gcids)
   setkey(gcMeta, gcids)
   gcMeta <- merge(gcMeta, gcThisSim)
+
   # curveID are the columns use to make the unique levels in the factor gcids.
   # These factor levels are the link between the pixelGroups and the curve to be
   # use to growth their AGB. In this case (SK) the levels of the factor need to
   # come from the gcMeta, not the level3DT. Just in case all growth curves need
   # to be processed. If sim$level3DT exist, its gcids needs to match these.
-
   curveID <- sim$curveID
   if (!is.null(sim$level3DT)) {
-    gcidsLevels <- levels(sim$level3DT$gcids)
+    gcidsLevels <- levels(sim$level3DT$gcids) ## CAMILLE DEC 2024: This didn't work for Vini's example with only 1 option. For his data I used unique(sim$level3DT$gcids)
     gcids <- factor(gcidsCreate(gcMeta[, ..curveID]), levels = gcidsLevels)
   } else {
     gcids <- factor(gcidsCreate(gcMeta[, ..curveID]))
   }
 
   set(gcMeta, NULL, "gcids", gcids)
-
-  # if (!is.null(sim$level3DT)) {
-  #   gcidsLevels <- levels(gcids)
-  #   gcids <- factor(gcidsCreate(sim$levelDT[, ..curveID]), levels = gcidsLevels)
-  #  }
-
   sim$gcMetaAllCols <- gcMeta
 
   # START processing curves from m3/ha to tonnes of C/ha then to annual increments
@@ -530,6 +482,7 @@ Init <- function(sim) {
   birchColsChg <- c("fol", "other")
   ##TODO this (which curve to replace the wonky ones with) will have to be
   ##decided by the user after they look at all the curves.
+  if(any(cumPoolsRaw$gcids == 37 | cumPoolsRaw$gcids == 58)) {
   if (any(cumPoolsRaw$gcids == 55)) {
     cumPoolsRaw[gcids %in% birchGcIds, fol := rep(cumPoolsRaw[gcids == 55, fol],length(birchGcIds))]
     cumPoolsRaw[gcids %in% birchGcIds, other := rep(cumPoolsRaw[gcids == 55, other],length(birchGcIds))]
@@ -546,6 +499,7 @@ Init <- function(sim) {
     setorderv(gc55raw, c("gcids", "age"))
     cumPoolsRaw[gcids %in% birchGcIds,fol := gc55raw[, fol]]
     cumPoolsRaw[gcids %in% birchGcIds,other := gc55raw[, other]]
+  }
   }
 
   cumPoolsClean <- cumPoolsSmooth(cumPoolsRaw) ##TODO Caching seems to produce an error.
@@ -831,22 +785,43 @@ plotFun <- function(sim) {
   #   )
   # }
 
-  # userGcM3 and userGcM3URL, these files are the m3/ha and age info by growth
-  # curve ID, columns should be gcids	Age	MerchVolume
-  ## TO DO: add a data manipulation to adjust if the m3 are not given on a yearly basis
-  if (!suppliedElsewhere("userGcM3", sim)) {
-      if (!suppliedElsewhere("userGcM3URL", sim)) {
-        sim$userGcM3URL <- extractURL("userGcM3")
+  # Growth and yield
+  ## TODO add a data manipulation to adjust if the m3 are not given on a yearly basis.
+  if (suppliedElsewhere("userGcM3", sim) | suppliedElsewhere("userGcM3URL", sim)){
+
+    if (suppliedElsewhere("userGcM3", sim)){
+
+      if (!inherits(sim$userGcM3, "data.table")){
+
+        sim$userGcM3 <- tryCatch(
+          data.table::as.data.table(sim$userGcM3),
+          error = function(e) stop(
+            "'userGcM3' could not be converted to data.table: ", e$message, call. = FALSE))
       }
+
+    }else if (suppliedElsewhere("userGcM3URL", sim)){
+
       sim$userGcM3 <- prepInputs(url = sim$userGcM3URL,
                                  destinationPath = inputPath(sim),
-                                 targetFile = "userGcM3.csv",
                                  fun = "data.table::fread")
-      names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
-      message(
-        "User has not supplied growth curves (m3 by age or the file name for the growth curves). ",
-        "The default will be used which is for a region in Saskatchewan."
-      )
+    }
+
+    reqCols <- c("gcids", "Age", "MerchVolume")
+    if (!all(reqCols %in% names(sim$userGcM3))) stop(
+      "'userGcM3' must have the following columns: ",
+      paste(shQuote(reqCols), collapse = ", "))
+
+  }else{
+
+    message("User has not supplied growth curves ('userGcM3' or 'userGcM3URL'). ",
+            "Defaults for Saskatchewan will be used.")
+
+    sim$userGcM3 <- prepInputs(url = extractURL("userGcM3"),
+                               destinationPath = inputPath(sim),
+                               targetFile = "userGcM3.csv",
+                               fun = "data.table::fread")
+    names(sim$userGcM3) <- c("gcids", "Age", "MerchVolume")
+
   }
 
 
