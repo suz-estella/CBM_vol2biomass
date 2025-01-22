@@ -463,9 +463,9 @@ Init <- function(sim) {
   # parameter finding in the cumPoolsSmooth fnct. Leaving these lines here as
   # exploration tools.
   # if (!is.na(P(sim)$.plotInitialTime))
-  # sim$plotsRawCumulativeBiomass <- m3ToBiomPlots( inc = cumPoolsRaw,
-  #                                        path = figPath,
-  #                                        filenameBase = "rawCumBiomass_")
+  sim$plotsRawCumulativeBiomass <- m3ToBiomPlots( inc = cumPoolsRaw,
+                                         path = figPath,
+                                         filenameBase = "rawCumBiomass_")
 
   # Fixing of non-smooth curves
   ## SK is a great example of poor performance of the Boudewyn et al 2007
@@ -512,7 +512,8 @@ Init <- function(sim) {
   #if (!is.na(P(sim)$.plotInitialTime)) {
     figs <- m3ToBiomPlots(inc = cumPoolsClean,
                   path = figPath,
-                  filenameBase = "cumPools_smoothed_postChapmanRichards")
+                  filenameBase = "cumPools_smoothed_postChapmanRichards"
+                  ) |> Cache()
     ##TODO |< Cache() seems to cause an error
     #Error in obj_size_(dots, env, size_node(), size_vector()) :
     #bad binding access.
@@ -535,7 +536,7 @@ Init <- function(sim) {
     rawIncPlots <- m3ToBiomPlots(inc = cumPoolsClean[, ..colsToUse33],
                          path = figPath,
                          title = "Smoothed increments merch fol other by gc id",
-                         filenameBase = "Increments") ##TODO caching results in error
+                         filenameBase = "Increments") |> Cache() ##TODO caching results in error
 #  }
   message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
                       figPath))
