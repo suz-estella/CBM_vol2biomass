@@ -227,8 +227,8 @@ Init <- function(sim) {
       stop("There are still yield curves that are not annually resolved")
   }
 
-  sim$volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = gcids, colour = gcids)) +
-    geom_line() ## TODO: move to plotInit event
+  sim$volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = gcids, colour = factor(gcids))) +
+    geom_line() + theme_bw() ## TODO: change to Plots()
   message("User: please look at the curve you provided via sim$volCurves")
   ## not all curves provided are used in the simulation - and ***FOR NOW*** each
   ## pixels only gets assigned one growth curve (no transition, no change in
@@ -377,7 +377,7 @@ Init <- function(sim) {
   }
 
   ##TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
-  #
+
   setkey(gcMeta, gcids)
   if (!unique(unique(userGcM3$gcids) == unique(gcMeta$gcids))) {
     stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
@@ -444,19 +444,16 @@ Init <- function(sim) {
 
   # 3. Plot the curves that are directly out of the Boudewyn-translation
   # Usually, these need to be, at a minimum, smoothed out.
-  ##TODO not sure why this is not working - to fix - workaround is hard coded.
-  # figPath <- checkPath(if (is.na(P(sim)$outputFigurePath)) {
-  #     file.path(modulePath(sim), currentModule(sim), "figures")
-  # } else {
-  #     if (basename(P(sim)$outputFigurePath) == currentModule(sim)) {
-  #       P(sim)$outputFigurePath
-  #     } else {
-  #       file.path(P(sim)$outputFigurePath, currentModule(sim))
-  #     }
-  # }, create = TRUE)
-  figPath <- file.path(modulePath(sim), currentModule(sim), "figures")
+  figPath <- checkPath(if (is.na(P(sim)$outputFigurePath)) {
+      file.path(modulePath(sim), currentModule(sim), "figures")
+  } else {
+      if (basename(P(sim)$outputFigurePath) == currentModule(sim)) {
+        P(sim)$outputFigurePath
+      } else {
+        file.path(P(sim)$outputFigurePath, currentModule(sim))
+      }
+  }, create = TRUE)
 
-  ##TODO either make this work or get rid of it.
   # plotting and save the plots of the raw-translation in the sim$ don't really
   # need this b/c the next use of m3ToBiomPlots fnct plots all 6 curves, 3
   # raw-translation and 3-smoothed curves resulting from the Chapman-Richards
@@ -507,18 +504,11 @@ Init <- function(sim) {
 
 
   # a[, totMerch := totMerchNew]
-  ##TODO - Forcing the plotting to happen (this can be reverted to
-  ##P(sim)$.plotInitialTime) once it is working properly)
   #if (!is.na(P(sim)$.plotInitialTime)) {
     figs <- m3ToBiomPlots(inc = cumPoolsClean,
                   path = figPath,
                   filenameBase = "cumPools_smoothed_postChapmanRichards"
                   ) |> Cache()
-    ##TODO |< Cache() seems to cause an error
-    #Error in obj_size_(dots, env, size_node(), size_vector()) :
-    #bad binding access.
-  #}
-
 
   ## keeping the new curves - at this point they are still cumulative
   set(cumPoolsClean, NULL, colNames, NULL)
@@ -530,13 +520,11 @@ Init <- function(sim) {
   cumPoolsClean[, (incCols) := lapply(.SD, function(x) c(NA, diff(x))), .SDcols = colNames,
                 by = eval("gcids")]
   colsToUse33 <- c("age", "gcids", incCols)
-  ##TODO - Forcing the plotting to happen (this can be reverted to
-  ##P(sim)$.plotInitialTime and Cached) once it is working properly)
 #  if (!is.na(P(sim)$.plotInitialTime)) {
     rawIncPlots <- m3ToBiomPlots(inc = cumPoolsClean[, ..colsToUse33],
                          path = figPath,
                          title = "Smoothed increments merch fol other by gc id",
-                         filenameBase = "Increments") |> Cache() ##TODO caching results in error
+                         filenameBase = "Increments") |> Cache()
 #  }
   message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
                       figPath))
@@ -570,21 +558,15 @@ Init <- function(sim) {
     merch_inc, foliage_inc, other_inc
   )]
   setorderv(increments, c("gcids", "age"))
-
-  ##TODO rework assertion for modification 1
-  # incColKeep <- c("id", "age", incCols)
-  # set(increments, NULL, "id", as.numeric(increments[["gcids"]]))
-  # set(increments, NULL, setdiff(colnames(increments), incColKeep), NULL)
-  # setcolorder(increments, incColKeep)
-  #
-  # # Assertions
-  # if (isTRUE(P(sim)$doAssertions)) {
-  #   # All should have same min age
-  #   if (length(unique(increments[, min(age), by = "id"]$V1)) != 1)
-  #     stop("All ages should start at the same age for each curveID")
-  #   if (length(unique(increments[, max(age), by = "id"]$V1)) != 1)
-  #     stop("All ages should end at the same age for each curveID")
-  # }
+browser()
+  # Assertions
+  if (isTRUE(P(sim)$doAssertions)) {
+    # All should have same min age
+    if (length(unique(increments[, min(age), by = "forest_type_id"]$V1)) != 1)
+      stop("All ages should start at the same age for each curveID")
+    if (length(unique(increments[, max(age), by = "forest_type_id"]$V1)) != 1)
+      stop("All ages should end at the same age for each curveID")
+  }
   ## replace increments that are NA with 0s
 
   increments[is.na(increments), ] <- 0
