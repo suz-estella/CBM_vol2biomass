@@ -23,7 +23,7 @@ defineModule(sim, list(
     defineParameter(
       "outputFigurePath", "character", NA, NA, NA,
       paste("Filepath to a directory where output figures will be saved.",
-            "If `NA` (the default), will use 'figures/' inside the module directory.")
+            "The default is a directory named 'CBM_vol2biomass_figures' within the simulation outputs directory.")
     ),
     defineParameter(
       ".plotInitialTime", "numeric", NA, NA, NA,
@@ -444,17 +444,13 @@ Init <- function(sim) {
 
   # 3. Plot the curves that are directly out of the Boudewyn-translation
   # Usually, these need to be, at a minimum, smoothed out.
-  ##TODO not sure why this is not working - to fix - workaround is hard coded.
-  # figPath <- checkPath(if (is.na(P(sim)$outputFigurePath)) {
-  #     file.path(modulePath(sim), currentModule(sim), "figures")
-  # } else {
-  #     if (basename(P(sim)$outputFigurePath) == currentModule(sim)) {
-  #       P(sim)$outputFigurePath
-  #     } else {
-  #       file.path(P(sim)$outputFigurePath, currentModule(sim))
-  #     }
-  # }, create = TRUE)
-  figPath <- file.path(modulePath(sim), currentModule(sim), "figures")
+  if (!is.null(P(sim)$outputFigurePath) && !is.na(P(sim)$outputFigurePath)){
+    figPath <- file.path(outputPath(sim), "CBM_vol2biomass_figures")
+    dir.create(figPath, recursive = TRUE, showWarnings = FALSE)
+  }else{
+    figPath <- P(sim)$outputFigurePath
+    if (!file.exists(figPath)) stop("Output figure path not found: ", figPath)
+  }
 
   ##TODO either make this work or get rid of it.
   # plotting and save the plots of the raw-translation in the sim$ don't really
