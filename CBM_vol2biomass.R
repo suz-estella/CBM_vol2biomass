@@ -444,7 +444,7 @@ Init <- function(sim) {
 
   # 3. Plot the curves that are directly out of the Boudewyn-translation
   # Usually, these need to be, at a minimum, smoothed out.
-  if (!is.null(P(sim)$outputFigurePath) && !is.na(P(sim)$outputFigurePath)){
+  if (!is.null(P(sim)$outputFigurePath) || !is.na(P(sim)$outputFigurePath)){
     figPath <- file.path(outputPath(sim), "CBM_vol2biomass_figures")
     dir.create(figPath, recursive = TRUE, showWarnings = FALSE)
   }else{
