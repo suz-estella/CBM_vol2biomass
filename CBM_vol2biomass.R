@@ -341,12 +341,13 @@ Init <- function(sim) {
 
   # END reducing Biomass model parameter tables -----------------------------------------------
 
-
   # Read-in user provided meta data for growth curves. This could be a complete
   # data frame with the same columns as gcMetaEg.csv OR is could be only curve
   # id and species.
   gcMeta <- sim$gcMeta
-  ##TODO have to insert some sort of check of gcMeta.
+  if (isFALSE(c("gcids", "species") %in% colnames(gcMeta))) {
+    stop("Curve ID or species is missing from gcMeta")
+  }
 
   # checking how many columns in gcMeta, if not 5, columns need to be added
   if (!ncol(gcMeta) == 5) {
@@ -375,8 +376,6 @@ Init <- function(sim) {
     }
     stop("Species in gcMeta do not match with those in the canfi_species table")
   }
-
-  ##TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
 
   setkey(gcMeta, gcids)
   if (!unique(unique(userGcM3$gcids) == unique(gcMeta$gcids))) {
@@ -499,7 +498,8 @@ Init <- function(sim) {
   }
   }
 
-  cumPoolsClean <- cumPoolsSmooth(cumPoolsRaw) ##TODO Caching seems to produce an error.
+  cumPoolsClean <- cumPoolsSmooth(cumPoolsRaw
+                                  ) |> Cache()
   #Note: this will produce a warning if one of the curve smoothing efforts doesn't converge
 
 
@@ -558,7 +558,7 @@ Init <- function(sim) {
     merch_inc, foliage_inc, other_inc
   )]
   setorderv(increments, c("gcids", "age"))
-browser()
+
   # Assertions
   if (isTRUE(P(sim)$doAssertions)) {
     # All should have same min age
