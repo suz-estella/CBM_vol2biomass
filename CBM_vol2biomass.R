@@ -455,6 +455,7 @@ Init <- function(sim) {
   #     }
   # }, create = TRUE)
   figPath <- file.path(modulePath(sim), currentModule(sim), "figures")
+  dir.create(figPath, showWarnings = FALSE)
 
   ##TODO either make this work or get rid of it.
   # plotting and save the plots of the raw-translation in the sim$ don't really
