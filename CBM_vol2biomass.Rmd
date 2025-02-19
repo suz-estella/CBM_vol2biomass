@@ -10,7 +10,8 @@ editor_options:
   markdown: 
     wrap: sentence
 ---
-
+```{r setup-CBM_vol2biomass, include = FALSE}
+```
 # CBM_vol2biomass
 
 ## Overview
@@ -50,13 +51,6 @@ editor_options:
 
 ## OLD VERSION
 
-```{=html}
-<!-- TODO: cleanup and format this file
-     * one sentence per line
-     * use backticks for code formatting
-     * remane modules!
--->
-```
 # CBM_vol2biomass
 
 ## Overview

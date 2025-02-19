@@ -23,7 +23,7 @@ defineModule(sim, list(
     defineParameter(
       "outputFigurePath", "character", NA, NA, NA,
       paste("Filepath to a directory where output figures will be saved.",
-            "If `NA` (the default), will use 'figures/' inside the module directory.")
+            "The default is a directory named 'CBM_vol2biomass_figures' within the simulation outputs directory.")
     ),
     defineParameter(
       ".plotInitialTime", "numeric", NA, NA, NA,
@@ -227,8 +227,8 @@ Init <- function(sim) {
       stop("There are still yield curves that are not annually resolved")
   }
 
-  sim$volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = gcids, colour = gcids)) +
-    geom_line() ## TODO: move to plotInit event
+  sim$volCurves <- ggplot(data = sim$userGcM3, aes(x = Age, y = MerchVolume, group = gcids, colour = factor(gcids))) +
+    geom_line() + theme_bw() ## TODO: change to Plots()
   message("User: please look at the curve you provided via sim$volCurves")
   ## not all curves provided are used in the simulation - and ***FOR NOW*** each
   ## pixels only gets assigned one growth curve (no transition, no change in
@@ -341,12 +341,13 @@ Init <- function(sim) {
 
   # END reducing Biomass model parameter tables -----------------------------------------------
 
-
   # Read-in user provided meta data for growth curves. This could be a complete
   # data frame with the same columns as gcMetaEg.csv OR is could be only curve
   # id and species.
   gcMeta <- sim$gcMeta
-  ##TODO have to insert some sort of check of gcMeta.
+  if (isFALSE(c("gcids", "species") %in% colnames(gcMeta))) {
+    stop("Curve ID or species is missing from gcMeta")
+  }
 
   # checking how many columns in gcMeta, if not 5, columns need to be added
   if (!ncol(gcMeta) == 5) {
@@ -376,8 +377,6 @@ Init <- function(sim) {
     stop("Species in gcMeta do not match with those in the canfi_species table")
   }
 
-  ##TODO CHECK - this in not tested NOT SURE IF THIS IS NEEDED NOW THAT WE ARE WORKING WITH FACTORS
-  #
   setkey(gcMeta, gcids)
   if (!unique(unique(userGcM3$gcids) == unique(gcMeta$gcids))) {
     stop("There is a missmatch in the growth curves of the userGcM3 and the gcMeta")
@@ -444,28 +443,23 @@ Init <- function(sim) {
 
   # 3. Plot the curves that are directly out of the Boudewyn-translation
   # Usually, these need to be, at a minimum, smoothed out.
-  ##TODO not sure why this is not working - to fix - workaround is hard coded.
-  # figPath <- checkPath(if (is.na(P(sim)$outputFigurePath)) {
-  #     file.path(modulePath(sim), currentModule(sim), "figures")
-  # } else {
-  #     if (basename(P(sim)$outputFigurePath) == currentModule(sim)) {
-  #       P(sim)$outputFigurePath
-  #     } else {
-  #       file.path(P(sim)$outputFigurePath, currentModule(sim))
-  #     }
-  # }, create = TRUE)
-  figPath <- file.path(modulePath(sim), currentModule(sim), "figures")
+  if (!is.null(P(sim)$outputFigurePath) || !is.na(P(sim)$outputFigurePath)){
+    figPath <- file.path(outputPath(sim), "CBM_vol2biomass_figures")
+    dir.create(figPath, recursive = TRUE, showWarnings = FALSE)
+  }else{
+    figPath <- P(sim)$outputFigurePath
+    if (!file.exists(figPath)) stop("Output figure path not found: ", figPath)
+  }
 
-  ##TODO either make this work or get rid of it.
   # plotting and save the plots of the raw-translation in the sim$ don't really
   # need this b/c the next use of m3ToBiomPlots fnct plots all 6 curves, 3
   # raw-translation and 3-smoothed curves resulting from the Chapman-Richards
   # parameter finding in the cumPoolsSmooth fnct. Leaving these lines here as
   # exploration tools.
   # if (!is.na(P(sim)$.plotInitialTime))
-  # sim$plotsRawCumulativeBiomass <- m3ToBiomPlots( inc = cumPoolsRaw,
-  #                                        path = figPath,
-  #                                        filenameBase = "rawCumBiomass_")
+  sim$plotsRawCumulativeBiomass <- m3ToBiomPlots( inc = cumPoolsRaw,
+                                         path = figPath,
+                                         filenameBase = "rawCumBiomass_")
 
   # Fixing of non-smooth curves
   ## SK is a great example of poor performance of the Boudewyn et al 2007
@@ -502,22 +496,17 @@ Init <- function(sim) {
   }
   }
 
-  cumPoolsClean <- cumPoolsSmooth(cumPoolsRaw) ##TODO Caching seems to produce an error.
+  cumPoolsClean <- cumPoolsSmooth(cumPoolsRaw
+                                  ) |> Cache()
   #Note: this will produce a warning if one of the curve smoothing efforts doesn't converge
 
 
   # a[, totMerch := totMerchNew]
-  ##TODO - Forcing the plotting to happen (this can be reverted to
-  ##P(sim)$.plotInitialTime) once it is working properly)
   #if (!is.na(P(sim)$.plotInitialTime)) {
     figs <- m3ToBiomPlots(inc = cumPoolsClean,
                   path = figPath,
-                  filenameBase = "cumPools_smoothed_postChapmanRichards")
-    ##TODO |< Cache() seems to cause an error
-    #Error in obj_size_(dots, env, size_node(), size_vector()) :
-    #bad binding access.
-  #}
-
+                  filenameBase = "cumPools_smoothed_postChapmanRichards"
+                  ) |> Cache()
 
   ## keeping the new curves - at this point they are still cumulative
   set(cumPoolsClean, NULL, colNames, NULL)
@@ -529,13 +518,11 @@ Init <- function(sim) {
   cumPoolsClean[, (incCols) := lapply(.SD, function(x) c(NA, diff(x))), .SDcols = colNames,
                 by = eval("gcids")]
   colsToUse33 <- c("age", "gcids", incCols)
-  ##TODO - Forcing the plotting to happen (this can be reverted to
-  ##P(sim)$.plotInitialTime and Cached) once it is working properly)
 #  if (!is.na(P(sim)$.plotInitialTime)) {
     rawIncPlots <- m3ToBiomPlots(inc = cumPoolsClean[, ..colsToUse33],
                          path = figPath,
                          title = "Smoothed increments merch fol other by gc id",
-                         filenameBase = "Increments") ##TODO caching results in error
+                         filenameBase = "Increments") |> Cache()
 #  }
   message(crayon::red("User: please inspect figures of the raw and smoothed translation of your growth curves in: ",
                       figPath))
@@ -570,20 +557,14 @@ Init <- function(sim) {
   )]
   setorderv(increments, c("gcids", "age"))
 
-  ##TODO rework assertion for modification 1
-  # incColKeep <- c("id", "age", incCols)
-  # set(increments, NULL, "id", as.numeric(increments[["gcids"]]))
-  # set(increments, NULL, setdiff(colnames(increments), incColKeep), NULL)
-  # setcolorder(increments, incColKeep)
-  #
-  # # Assertions
-  # if (isTRUE(P(sim)$doAssertions)) {
-  #   # All should have same min age
-  #   if (length(unique(increments[, min(age), by = "id"]$V1)) != 1)
-  #     stop("All ages should start at the same age for each curveID")
-  #   if (length(unique(increments[, max(age), by = "id"]$V1)) != 1)
-  #     stop("All ages should end at the same age for each curveID")
-  # }
+  # Assertions
+  if (isTRUE(P(sim)$doAssertions)) {
+    # All should have same min age
+    if (length(unique(increments[, min(age), by = "forest_type_id"]$V1)) != 1)
+      stop("All ages should start at the same age for each curveID")
+    if (length(unique(increments[, max(age), by = "forest_type_id"]$V1)) != 1)
+      stop("All ages should end at the same age for each curveID")
+  }
   ## replace increments that are NA with 0s
 
   increments[is.na(increments), ] <- 0
@@ -622,168 +603,23 @@ plotFun <- function(sim) {
   # dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   # message(currentModule(sim), ": using dataPath '", dPath, "'.")
 
-  # if (!suppliedElsewhere("gcids", sim)) {
-  #   ## this is where the pixelGroups and their spu eco etc.
-  #   message("No spatial information was provided for the growth curves.
-  #           The default values (SK simulations) will be used to limit the number of growth curves used.")
-  #   sim$gcids <- c(
-  #     52, 52, 58, 52, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55, 58,
-  #     61, 28, 29, 31, 34, 35, 37, 40, 49, 50, 52, 55, 58, 61, 28, 29,
-  #     31, 34, 37, 40, 49, 50, 52, 55, 56, 58, 61, 28, 29, 31, 34, 40,
-  #     49, 50, 52, 55, 58, 61, 28, 34, 49, 52, 55, 40, 28, 31, 34, 40,
-  #     49, 50, 52, 55, 61, 28, 31, 34, 40, 49, 50, 52, 55, 61, 52, 55,
-  #     58, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55, 58, 61, 28, 31, 34,
-  #     37, 40, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37, 40, 49, 50, 52,
-  #     55, 61, 28, 31, 34, 40, 49, 52, 55, 61, 28, 61, 52, 61, 62, 28,
-  #     31, 34, 40, 49, 50, 52, 55, 61, 31, 34, 49, 52, 55, 28, 31, 34,
-  #     40, 49, 50, 52, 55, 58, 61, 62, 28, 29, 31, 34, 40, 49, 50, 52,
-  #     55, 61, 28, 34, 40, 49, 50, 52, 55, 61, 62, 28, 34, 40, 61, 49,
-  #     31, 40, 49, 61, 28, 29, 31, 34, 40, 49, 50, 52, 58, 61, 28, 31,
-  #     34, 40, 49, 50, 52, 55, 61, 49, 52, 55, 28, 31, 34, 40, 49, 50,
-  #     52, 55, 58, 61, 28, 31, 34, 40, 49, 50, 52, 55, 61, 40, 49, 50,
-  #     52, 61, 28, 31, 31, 61, 28, 31, 34, 49, 50, 55, 61, 28, 31, 34,
-  #     49, 61, 28, 34, 52, 61, 31, 49, 52, 55, 55, 40, 28, 49, 28, 31,
-  #     34, 49, 52, 28, 31, 58, 61, 28, 31, 34, 49, 50, 61, 52, 49, 52,
-  #     55, 58, 31, 34, 37, 49, 52, 55, 52, 55, 58, 31, 34, 49, 52, 55,
-  #     56, 58, 31, 34, 49, 52, 55, 56, 58, 61, 49, 52, 55, 52, 55, 28,
-  #     34, 49, 55, 28, 31, 34, 37, 52, 55, 49, 52, 55, 28, 31, 34, 37,
-  #     49, 52, 55, 58, 28, 31, 34, 37, 49, 52, 55, 58, 28, 31, 34, 37,
-  #     49, 52, 55, 34, 37, 50, 52, 52, 28, 31, 34, 37, 52, 55, 28, 31,
-  #     34, 37, 49, 52, 55, 58, 52, 55, 28, 31, 34, 37, 40, 49, 52, 55,
-  #     58, 28, 31, 34, 37, 40, 49, 52, 55, 58, 61, 28, 31, 34, 37, 49,
-  #     52, 55, 58, 28, 31, 34, 37, 52, 55, 31, 52, 55, 31, 28, 31, 34,
-  #     37, 40, 49, 52, 55, 58, 28, 31, 34, 37, 40, 49, 50, 52, 55, 58,
-  #     52, 55, 28, 31, 34, 37, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37,
-  #     40, 49, 50, 52, 55, 58, 28, 31, 34, 37, 40, 49, 50, 52, 55, 58,
-  #     28, 31, 34, 37, 49, 52, 55, 58, 34, 49, 55, 28, 31, 28, 31, 34,
-  #     49, 52, 55, 58, 28, 31, 34, 37, 49, 50, 52, 55, 58, 61, 49, 52,
-  #     28, 31, 34, 37, 40, 49, 50, 52, 55, 58, 28, 29, 31, 34, 35, 37,
-  #     40, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37, 40, 49, 50, 52, 55,
-  #     58, 61, 28, 31, 34, 49, 52, 55, 58, 52, 28, 28, 34, 49, 55, 58,
-  #     61, 28, 34, 37, 49, 50, 52, 55, 58, 61, 28, 31, 34, 37, 40, 49,
-  #     50, 52, 55, 58, 61, 28, 31, 34, 37, 49, 50, 52, 55, 58, 61, 28,
-  #     31, 34, 49, 50, 52, 55, 58, 61, 28, 40, 49, 55, 58, 49, 34, 28,
-  #     31, 34, 49, 50, 52, 55, 58, 28, 31, 34, 37, 40, 49, 50, 52, 55,
-  #     58, 61, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55, 58, 61, 28, 29,
-  #     31, 34, 37, 40, 49, 50, 52, 55, 56, 58, 61, 28, 29, 31, 34, 37,
-  #     40, 49, 50, 52, 55, 58, 61, 28, 29, 31, 34, 40, 49, 50, 52, 55,
-  #     61, 31, 50, 49, 52, 61, 28, 31, 34, 49, 50, 52, 55, 58, 61, 28,
-  #     31, 34, 37, 40, 49, 50, 52, 55, 58, 61, 52, 28, 31, 34, 37, 40,
-  #     49, 50, 52, 55, 58, 61, 28, 29, 31, 34, 37, 40, 49, 50, 52, 55,
-  #     58, 61, 28, 31, 34, 40, 49, 50, 52, 55, 58, 61, 28, 34, 49, 50,
-  #     52, 55, 58, 61, 49, 50, 55, 61, 49, 52, 55, 58, 61, 28, 29, 31,
-  #     34, 40, 49, 50, 52, 55, 58, 61, 28, 29, 31, 34, 37, 40, 49, 50,
-  #     52, 55, 58, 61
-  #   )
-  # }
-  #
-  # if (!suppliedElsewhere("ecozones", sim)) {
-  #   message("No spatial information was provided for the growth curves.
-  #           The default values (SK simulations) will be used to determine which ecozones these curves are in.")
-  #   sim$ecozones <- c(
-  #     9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6,
-  #     6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9,
-  #     9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 6, 6, 6, 6,
-  #     6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6,
-  #     6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6,
-  #     6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 9, 9, 9,
-  #     9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 6, 6, 6, 6, 9, 9,
-  #     9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9,
-  #     9, 9, 9, 6, 6, 6, 9, 9, 6, 6, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9,
-  #     9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9,
-  #     9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 6, 6, 6, 9, 6,
-  #     6, 6, 9, 9, 9, 9, 6, 6, 6, 9, 9, 6, 6, 9, 9, 6, 9, 9, 9, 9, 6,
-  #     6, 9, 6, 6, 6, 9, 9, 6, 6, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9,
-  #     9, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 6, 6, 9, 9,
-  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9,
-  #     9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6,
-  #     9, 9, 9, 6, 6, 9, 9, 9, 6, 6, 6, 6, 9, 9, 6, 6, 6, 6, 9, 9, 9,
-  #     9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9,
-  #     9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 6, 9, 9, 6, 6, 6,
-  #     6, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 6, 6,
-  #     6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6,
-  #     6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 6, 9, 9, 6, 6, 6,
-  #     6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6,
-  #     6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6,
-  #     6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6,
-  #     9, 9, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9,
-  #     9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9, 9, 9,
-  #     9, 6, 6, 9, 9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6,
-  #     9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6,
-  #     6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9,
-  #     9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 6, 6, 6, 9, 9,
-  #     9, 9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6,
-  #     9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6,
-  #     6, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-  #     9, 9, 9, 6, 6, 6, 6, 6, 9, 9, 9, 9, 9, 9, 6, 6, 6, 6, 6, 6, 9,
-  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9,
-  #     9, 9, 9, 6, 6, 6, 6, 9, 9, 9, 6, 9, 6, 6, 6, 9, 9, 9, 9, 6, 6,
-  #     9, 6, 6, 6, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-  #     9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 6, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9,
-  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-  #     9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 6, 6, 6, 9, 9, 9,
-  #     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9,
-  #     6, 6, 6, 6, 9, 9, 9, 6, 6, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9,
-  #     6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 6, 9, 9,
-  #     9, 6, 9, 9, 9, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-  #     9
-  #   )
-  # }
-  # if (!suppliedElsewhere("spatialUnits", sim)) {
-  #   message("No spatial information was provided for the growth curves.
-  #           The default values (SK simulations) will be used to determine which CBM-spatial units these curves are in.")
-  #   sim$spatialUnits <- c(
-  #     28, 28, 28, 28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28,
-  #     28, 27, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27,
-  #     27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27,
-  #     28, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28, 27, 27, 27, 27, 27,
-  #     28, 28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28,
-  #     28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27,
-  #     27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28,
-  #     28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 27, 28, 28, 28, 28, 27,
-  #     27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28, 27, 27, 27,
-  #     27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28,
-  #     28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 28, 28,
-  #     27, 27, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27,
-  #     27, 27, 28, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 28, 28,
-  #     28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 28, 28,
-  #     28, 28, 27, 27, 27, 28, 27, 27, 27, 28, 28, 28, 28, 27, 27, 27,
-  #     28, 28, 27, 27, 28, 28, 27, 28, 28, 28, 28, 27, 27, 28, 27, 27,
-  #     27, 28, 28, 27, 27, 28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28,
-  #     28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28,
-  #     28, 28, 27, 27, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 27,
-  #     27, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27,
-  #     28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 27, 27, 27, 27,
-  #     28, 28, 28, 27, 27, 28, 28, 28, 27, 27, 27, 27, 28, 28, 27, 27,
-  #     27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28,
-  #     28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 28,
-  #     28, 28, 28, 27, 27, 27, 27, 28, 28, 27, 28, 28, 27, 27, 27, 27,
-  #     27, 27, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28,
-  #     28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27,
-  #     27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28,
-  #     27, 27, 27, 27, 28, 28, 28, 28, 27, 28, 28, 27, 27, 27, 27, 27,
-  #     28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 28,
-  #     27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 27,
-  #     27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28,
-  #     28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 28, 28, 28,
-  #     28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28,
-  #     28, 28, 28, 28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27,
-  #     27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 28, 28, 28, 28, 27, 27,
-  #     27, 27, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28,
-  #     28, 28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27,
-  #     27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27,
-  #     27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 28, 28, 28, 28,
-  #     28, 27, 28, 28, 28, 28, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27,
-  #     27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27,
-  #     28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28,
-  #     28, 28, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 28, 28,
-  #     28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 27, 27, 27,
-  #     27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27, 27, 27, 28, 28,
-  #     28, 28, 28, 28
-  #   )
-  # }
+  if (!suppliedElsewhere("gcids", sim)) {
+    ## this is where the pixelGroups and their spu eco etc.
+    message("No spatial information was provided for the growth curves.
+            The default values (SK simulations) will be used to limit the number of growth curves used.")
+    sim$gcids <- gcidsSK
+  }
+
+  if (!suppliedElsewhere("ecozones", sim)) {
+    message("No spatial information was provided for the growth curves.
+            The default values (SK simulations) will be used to determine which ecozones these curves are in.")
+    sim$ecozones <- ecozonesSK
+  }
+  if (!suppliedElsewhere("spatialUnits", sim)) {
+    message("No spatial information was provided for the growth curves.
+            The default values (SK simulations) will be used to determine which CBM-spatial units these curves are in.")
+    sim$spatialUnits <- spatialUnitsSK
+  }
 
   # Growth and yield
   ## TODO add a data manipulation to adjust if the m3 are not given on a yearly basis.
@@ -838,16 +674,6 @@ plotFun <- function(sim) {
     sim$table3 <- prepInputs(url = sim$table3URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-
-  #
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   # these are the columns needed in the functions for calculating biomass
-  #   t3hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species", "a", "b", "volm")
-  #   if (length(which(colnames(sim$table3) %in% t3hasToHave)) != length(t3hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table3) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
   if (!suppliedElsewhere("table4", sim)) {
@@ -857,15 +683,6 @@ plotFun <- function(sim) {
     sim$table4 <- prepInputs(url = sim$table4URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t4hasToHave <- c("juris_id", "ecozone", "canfi_species", "genus", "species",
-  #                     "a", "b", "k", "cap", "volm")
-  #   if (!length(which(colnames(sim$table4) %in% t4hasToHave)) == length(t4hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table4) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
 
@@ -876,14 +693,6 @@ plotFun <- function(sim) {
     sim$table5 <- prepInputs(url = sim$table5URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-  #
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t5hasToHave <- c("juris_id", "ecozone", "canfi_genus", "genus", "a", "b", "k", "cap", "volm")
-  #   if (!length(which(colnames(sim$table5) %in% t5hasToHave)) == length(t5hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table5) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
 
@@ -894,15 +703,6 @@ plotFun <- function(sim) {
     sim$table6 <- prepInputs(url = sim$table6URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-  #
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t6hasToHave <- c("juris_id", "ecozone", "canfi_species", "a1", "a2", "a3", "b1", "b2", "b3",
-  #                    "c1", "c2", "c3" )
-  #   if (!length(which(colnames(sim$table6) %in% t6hasToHave)) == length(t6hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table6) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
   if (!suppliedElsewhere("table7", sim)) {
@@ -912,16 +712,6 @@ plotFun <- function(sim) {
     sim$table7 <- prepInputs(url = sim$table7URL,
                              destinationPath = inputPath(sim),
                              fun = fread)
-
-  #   ### NOTE: the .csv previously had a column with commas, which adds an extra col
-  #   t7hasToHave <- c("juris_id", "ecozone", "canfi_species", "vol_min", "vol_max", "p_sw_low",
-  #                    "p_sb_low", "p_br_low", "p_fl_low", "p_sw_high", "p_sb_high", "p_br_high",
-  #                    "p_fl_high")
-  #   if (length(which(colnames(sim$table7) %in% t7hasToHave)) != length(t7hasToHave)) {
-  #     message(
-  #       "The parameter table (appendix2_table7) does not have the expected number of columns. ",
-  #       "This means parameters are missing. The default (older) parameter file will be used instead."
-  #     )
       }
 
 
