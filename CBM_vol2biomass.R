@@ -731,14 +731,26 @@ plotFun <- function(sim) {
   # cbmAdmin: this is needed to match species and parameters. Boudewyn et al 2007
   # abbreviation and cbm spatial units and ecoBoudnary id is provided with the
   # adminName to avoid confusion.
-  if (!suppliedElsewhere("cbmAdmin", sim)) {
-    if (!suppliedElsewhere("cbmAdminURL", sim)) {
-      sim$cbmAdminURL <- extractURL("cbmAdmin")
+  if (!suppliedElsewhere("cbmAdmin", sim)){
+
+    if (suppliedElsewhere("cbmAdminURL", sim) &
+        !identical(sim$cbmAdminURL, extractURL("cbmAdmin"))){
+
+      sim$cbmAdmin <- prepInputs(
+        destinationPath = inputPath(sim),
+        url = sim$cbmAdminURL,
+        fun = data.table::fread
+      )
+
+    }else{
+
+      sim$cbmAdmin <- prepInputs(
+        destinationPath = inputPath(sim),
+        url        = extractURL("cbmAdmin"),
+        targetFile = "cbmAdmin.csv",
+        fun        = data.table::fread
+      )
     }
-        sim$cbmAdmin <- prepInputs(url = sim$cbmAdminURL,
-                                   targetFile = "cbmAdmin.csv",
-                                   destinationPath = inputPath(sim),
-                                   fun = fread)
   }
 
   # canfi_species: for the Boudewyn parameters, the species have to be matched
