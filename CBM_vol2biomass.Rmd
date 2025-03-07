@@ -14,7 +14,7 @@ editor_options:
 ```
 # CBM_vol2biomass
 
-::: {.callout-important}
+:::{.rmdimportant}
 This documentation is work in progress. Potential discrepancies and omissions may exist for the time being. If you find any regarding this module, contact us [here]("https://github.com/PredictiveEcology/CBM_vol2biomass/issues").
 :::
 
