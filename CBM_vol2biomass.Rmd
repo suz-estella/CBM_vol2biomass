@@ -55,8 +55,6 @@ This documentation is work in progress. Potential discrepancies and omissions ma
 
 ## OLD VERSION
 
-# CBM_vol2biomass
-
 ## Overview
 
 This module translates the m3/ha values into the biomass/ha increments that spadesCBMcore needs to simulate annual carbon fluxes and estimate stocks in the spadesCBMcore.R module of the spadesCBM.
