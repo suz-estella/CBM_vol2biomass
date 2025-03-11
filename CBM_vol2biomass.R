@@ -16,7 +16,7 @@ defineModule(sim, list(
   citation = list("citation.bib"),
   documentation = deparse(list("README.txt", "CBM_vol2biomass.Rmd")),
   reqdPkgs = list(
-    "PredictiveEcology/CBMutils@development",
+    "PredictiveEcology/CBMutils@development", "PredictiveEcology/LandR@development",
     "ggforce", "ggplot2", "ggpubr", "googledrive", "mgcv", "quickPlot", "robustbase"
   ),
   parameters = rbind(
@@ -360,15 +360,21 @@ Init <- function(sim) {
     # code) and species (three letter code).
     gcMeta2 <- gcMeta[, .(gcids, species)]
 
+    landRSpecies <- LandR::sppEquivalencies_CA[,.(CanfiCode, NFI, EN_generic_full, Broadleaf)]
+    landRSpecies <- landRSpecies %>%
+      tidyr::extract(NFI, into = c("genus", "species"), "(.*)_([^_]+)$")
+    colnames(landRSpecies)[colnames(landRSpecies) == c("CanfiCode", "genus", "species", "EN_generic_full", "Broadleaf")] <- c("CanfiCode", "genus", "species", "name", "forest_type_id")
+    landRSpecies$forest_type_id[landRSpecies$forest_type_id == FALSE] <- "3"
+    landRSpecies$forest_type_id[landRSpecies$forest_type_id == TRUE] <- "1"
     # check if all the species are in the canfi_species table
     ### THIS HAS NOT BEEN TESTED YET
-    if (nrow(gcMeta2) == length(which(gcMeta$species %in% sim$canfi_species$name))) {
-      spsMatch <- sim$canfi_species[
+    if (nrow(gcMeta2) == length(which(gcMeta$species %in% landRSpecies$name))) {
+      spsMatch <- landRSpecies[
         , which(name %in% gcMeta2$species),
-        .(canfi_species, genus, name, forest_type_id)
+        .(CanfiCode, genus, name, forest_type_id)
       ]
       spsMatch[, V1 := NULL]
-      names(spsMatch) <- c("canfi_species", "genus", "species", "forest_type_id")
+      names(spsMatch) <- c("CanfiCode", "genus", "species", "forest_type_id")
       setkey(gcMeta2, species)
       setkey(spsMatch, species)
       gcMeta3 <- merge(gcMeta2, spsMatch) # I do not think the order of the columns matter
