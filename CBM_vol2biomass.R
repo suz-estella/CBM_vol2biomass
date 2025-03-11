@@ -115,15 +115,6 @@ defineModule(sim, list(
       objectName = "table7URL", objectClass = "character",
       desc = "URL for table 7"),
     expectsInput(
-      objectName = "canfi_species", objectClass = "data.frame",
-      desc = paste("File containing the possible species in the Boudewyn table.",
-                   "Note that if Boudewyn et al. added species, this should be updated.",
-                   "Also note that such an update is very unlikely."),
-      sourceURL = "https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/"),
-    expectsInput(
-      objectName = "canfi_speciesURL", objectClass = "character",
-      desc = "URL for canfi_species"),
-    expectsInput(
       objectName = "spatialDT", objectClass = "data.table",
       desc = "the table containing one line per pixel",
       sourceURL = NA),
@@ -354,12 +345,8 @@ Init <- function(sim) {
     # help the user go from their growth curve id and leading species to the five
     # columns: names(gcMeta)
     # [1] "gcids" "species" "canfi_species" "genus" "forest_type_id"
-    # the data frame canfi_species.csv (in userData_Defaults_spadesCBM -
-    # https://drive.google.com/drive/folders/1OBDTp1v_3b3D3Yvg1pHLiW6A_GRklgpD?usp=sharing)
-    # has all the possible options for canfi_species (number), genus (4 letter
-    # code) and species (three letter code).
     gcMeta2 <- gcMeta[, .(gcids, species)]
-
+# this builds the LandRSpecies table that has all the possible options for canfi_species, genus (4 letter code), species (3 letter code)
     landRSpecies <- LandR::sppEquivalencies_CA[,.(CanfiCode, NFI, EN_generic_full, Broadleaf)]
     landRSpecies <- landRSpecies %>%
       tidyr::extract(NFI, into = c("genus", "species"), "(.*)_([^_]+)$")
@@ -367,7 +354,6 @@ Init <- function(sim) {
     landRSpecies$forest_type_id[landRSpecies$forest_type_id == FALSE] <- "3"
     landRSpecies$forest_type_id[landRSpecies$forest_type_id == TRUE] <- "1"
     # check if all the species are in the canfi_species table
-    ### THIS HAS NOT BEEN TESTED YET
     if (nrow(gcMeta2) == length(which(gcMeta$species %in% landRSpecies$name))) {
       spsMatch <- landRSpecies[
         , which(name %in% gcMeta2$species),
@@ -380,7 +366,7 @@ Init <- function(sim) {
       gcMeta3 <- merge(gcMeta2, spsMatch) # I do not think the order of the columns matter
       gcMeta <- gcMeta3
     }
-    stop("Species in gcMeta do not match with those in the canfi_species table")
+    stop("Species in gcMeta do not match with those in the LandR::sppEquivalencies_CA table")
   }
 
   setkey(gcMeta, gcids)
@@ -747,26 +733,6 @@ plotFun <- function(sim) {
                                    fun = fread)
   }
 
-  # canfi_species: for the Boudewyn parameters, the species have to be matched
-  # with the ones in the Boudewyn tables. The choices HAVE to be one of these.
-  # This contains three columns, canfi_species, genus and species form the
-  # publication and I added (manually) one more: forest_type_id. That variable is a CBM-CFS3
-  # indicator as follows:
-  # cbmTables$forest_type
-  # id           name
-  # 1  1       Softwood
-  # 2  2      Mixedwood
-  # 3  3       Hardwood
-  # 4  9 Not Applicable
-  if (!suppliedElsewhere("canfi_species", sim)) {
-    if (!suppliedElsewhere("canfi_speciesURL", sim)) {
-      sim$canfi_speciesURL <- extractURL("canfi_species")
-    }
-      sim$canfi_species <- prepInputs(url = sim$canfi_speciesURL,
-                                      targetFile = "canfi_species.csv",
-                                      destinationPath = inputPath(sim),
-                                      fun = fread)
-  }
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
