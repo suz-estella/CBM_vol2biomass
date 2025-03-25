@@ -20,7 +20,9 @@ This documentation is work in progress. Potential discrepancies and omissions ma
 
 ## Overview
 
-## List of input objects
+## Background
+
+## Inputs
 
 | Name          | Class      | Description | Source                                                                                                                                    |
 |------------|------------|-----------------------|--------------------------|
@@ -36,8 +38,9 @@ This documentation is work in progress. Potential discrepancies and omissions ma
 | table 7       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv)        |
 | cbmAdmin      | Data table | Provides ecozone and spatial unit information for provincial boundaries | [Google Drive](https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz)         |
 
+## Module functioning
 
-## List of output objects
+## Ouputs
 
 | Name              | Class      | Description |
 |-------------------|------------|-------------|
@@ -46,12 +49,11 @@ This documentation is work in progress. Potential discrepancies and omissions ma
 | gcMetaAllCols     | Data table | `gcMeta` with ecozones |
 | volCurves         | gg (list?) |  Plots of al growth curves provided by the user |
 
-## Module flow (rename this section later)
-1. 
-2.
-3.
-4.
+## Links to other modules
 
+- [CBM_defaults](https://github.com/PredictiveEcology/CBM_defaults)
+- [CBM_dataPrep_SK](https://github.com/PredictiveEcology/CBM_dataPrep_SK.git)
+- [CBM_core](https://github.com/PredictiveEcology/CBM_core)
 
 ## OLD VERSION
 
