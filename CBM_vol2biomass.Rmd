@@ -2,8 +2,8 @@
 title: "CBM_vol2biomass"
 author:
   - Celine Boisvenue
-  - Alex Chubaty
-date: "14 May 2020"
+  - Camille Giuliano
+date: "March 27, 2025"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
@@ -20,15 +20,20 @@ This documentation is work in progress. Potential discrepancies and omissions ma
 
 ## Overview
 
-## Background
+This module translates the stand-level $m^3/ha$ values the user provides into the $tonnes of biomass/ha$ increments that [CBM_core](https://github.com/PredictiveEcology/CBM_core.git) needs to simulate annual carbon fluxes and estimate stocks in [spadesCBM](https://github.com/PredictiveEcology/spadesCBM.git) simulations. This is an implementation of the @boudewyn2007 stand-level translation. These script are similar to the translation procedure in [CBM](https://predictiveecology.github.io/spadesCBM/lexicon.html) with the addition of 
+a smoothing algorithm to fill-in the gap between age 0 and the age at which growth curves have data. Like many statistical models, this translation is not always successful. The user is advised to review the resulting biomass increments as this are the only representation of vegetation dynamics in the [CBM](https://predictiveecology.github.io/spadesCBM/lexicon.html). 
+
+This module can be run independently of the [spadesCBM](https://github.com/PredictiveEcology/spadesCBM.git) [deck](https://predictiveecology.github.io/spadesCBM/lexicon.html). It relies on multiple [`CBMutils`](https://github.com/PredictiveEcology/CBMutils/tree/development) functions. 
 
 ## Inputs
 
+Two main pieces of information are needed to translate stand-level growth curves into stand-level biomass (in tonnes of biomass/ha) using the @boudewyn2007 approach: the curves themselves (specifying a leading species) and the location where these curves will be applied (specifically, i.e., which pixel, and generally, which [spatial unit](https://predictiveecology.github.io/spadesCBM/lexicon.html) and [ecozone](https://predictiveecology.github.io/spadesCBM/lexicon.html)). The object `UserGCM3` is how the user provides the stand-level $m^3/ha$, `gcMeta`links the growth curve to the leading species, the objects `level3DT`, `ecozones`, and `spatialUnits`provide location information. Table 1 lists the inputs to this module.
+
 | Name          | Class      | Description | Source                                                                                                                                    |
 |------------|------------|-----------------------|--------------------------|
-| userGCM3      | Data table |  User provided growth curve data  | [Google Drive](https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true) |
-| gcMeta        | Data table |  Species and growth curve IDs | [Google Drive](https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/)   |
-| spatialID     | Data table | Summary table of raster input data with 1 row for each `masterRaster` pixel that is not `NA` | CBM_dataPrep_SK                           |
+| userGCM3      | Data table |  User provided growth curve data  | <https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true> |
+| gcMeta        | Data table |  Species and growth curve IDs | <https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/>   |
+| level3DT     | Data table | Table of pixelGroups to be simulated with meta data | CBM_dataPrep_SK                           |
 | ecozones      | Data table | Extracted ecozone IDs for each pixel group | CBM_dataPrep_SK              |
 | spatialUnits | Data table | Extracted spatial unit IDs for each pixel group |
 | table 3       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv)        |
@@ -40,31 +45,32 @@ This documentation is work in progress. Potential discrepancies and omissions ma
 
 ## Module functioning
 
-## Ouputs
+
+
+
+## List of output objects
 
 | Name              | Class      | Description |
 |-------------------|------------|-------------|
-| cumPoolsClean     | Data table | Tonnes of carbon/ha both cumnulative and increments, for each growth curve id, by age and ecozone |
+| cumPoolsClean     | Data table | Tonnes of carbon/ha both cumulative and increments, for each growth curve id, by age and ecozone |
 | growth_increments | Data table | 1/2 growth increment matrix |
 | gcMetaAllCols     | Data table | `gcMeta` with ecozones |
 | volCurves         | gg (list?) |  Plots of al growth curves provided by the user |
 
-## Links to other modules
+## Module flow (rename this section later)
+
+Here how they relate:
+***INSERT a CARTOONY REPRESENTATION OF THE FUNCTIONS HIEARCHY**
+
+1. 
+2.
+3.
+4.
 
 - [CBM_defaults](https://github.com/PredictiveEcology/CBM_defaults)
 - [CBM_dataPrep_SK](https://github.com/PredictiveEcology/CBM_dataPrep_SK.git)
 - [CBM_core](https://github.com/PredictiveEcology/CBM_core)
 
-## OLD VERSION
-
-## Overview
-
-This module translates the m3/ha values into the biomass/ha increments that spadesCBMcore needs to simulate annual carbon fluxes and estimate stocks in the spadesCBMcore.R module of the spadesCBM.
-This is an implementation of the Boudewyn et al 2007 stand-level translation.
-Like many statistical models, this translation is not always successful.
-This scripts is in line with the translation procedure in CBM-CFS3 with the addition of smoothing methods using Generalized Additive Models (GAMs).
-This module provides two examples of smoothing methods: one applied to the cumulative carbon/ha curves (merch, foliage, and other for each growth curves provided), and one applied to the increment curves (differences betwee years of the cumulative curves).
-**It is the responsibility of the user to decide if these curves and smoothing methods are appropriate.** This module can be run independently of the spadesCBM deck of SpaDES modules.
 
 ### User input
 
