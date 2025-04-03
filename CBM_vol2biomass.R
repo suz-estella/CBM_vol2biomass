@@ -136,7 +136,7 @@ defineModule(sim, list(
     expectsInput(
       objectName = "gcMetaURL", objectClass = "character",
       desc = "URL for gcMeta")
-  ),
+  ),,
   outputObjects = bindrows(
     # createsOutput("objectName", "objectClass", "output object description", ...),
     createsOutput(
@@ -152,7 +152,7 @@ defineModule(sim, list(
       the same), by age and ecozone"),
     createsOutput(
       objectName = "growth_increments", objectClass = "matrix",
-      desc = "Matrix of the 1/2 increment that will be used to create the `gcHash`")
+      desc = "Carbon increment matrix by age for each gcids")
   )
 ))
 
