@@ -335,38 +335,41 @@ Init <- function(sim) {
   # Read-in user provided meta data for growth curves. This could be a complete
   # data frame with the same columns as gcMetaEg.csv OR is could be only curve
   # id and species.
+  ## Check that all required columns are available:
+  ## "gcids" "species" "canfi_species" "genus" "forest_type_id"
   gcMeta <- sim$gcMeta
-  if (isFALSE(c("gcids", "species") %in% colnames(gcMeta))) {
-    stop("Curve ID or species is missing from gcMeta")
-  }
+  if (!all(c(sim$curveID, "species") %in% names(gcMeta))) stop(
+    "gcMeta is missing column(s): ",
+    paste(shQuote(setdiff(c(sim$curveID, "species"), names(gcMeta))), collapse = ", "))
 
-  # checking how many columns in gcMeta, if not 5, columns need to be added
-  if (!ncol(gcMeta) == 5) {
-    # help the user go from their growth curve id and leading species to the five
-    # columns: names(gcMeta)
-    # [1] "gcids" "species" "canfi_species" "genus" "forest_type_id"
-    gcMeta2 <- gcMeta[, .(gcids, species)]
-# this builds the LandRSpecies table that has all the possible options for canfi_species, genus (4 letter code), species (3 letter code)
-    landRSpecies <- LandR::sppEquivalencies_CA[,.(CanfiCode, NFI, EN_generic_full, Broadleaf)]
-    landRSpecies <- landRSpecies %>%
-      tidyr::extract(NFI, into = c("genus", "species"), "(.*)_([^_]+)$")
-    colnames(landRSpecies)[colnames(landRSpecies) == c("CanfiCode", "genus", "species", "EN_generic_full", "Broadleaf")] <- c("CanfiCode", "genus", "species", "name", "forest_type_id")
-    landRSpecies$forest_type_id[landRSpecies$forest_type_id == FALSE] <- "3"
-    landRSpecies$forest_type_id[landRSpecies$forest_type_id == TRUE] <- "1"
+  # Check that all required columns are available:
+  ## "gcids" "species" "canfi_species" "genus" "forest_type_id"
+  if (!all(c("canfi_species", "genus", "forest_type_id") %in% names(gcMeta))) {
+
+    gcMeta[, species_lower := trimws(tolower(species))]
+
+    # this builds the LandRSpecies table that has all the possible options for canfi_species, genus (4 letter code), species (3 letter code)
+    landRSpecies <- LandR::sppEquivalencies_CA[, .(
+      canfi_code     = CanfiCode,
+      name           = tolower(EN_generic_full),
+      forest_type_id = sapply(Broadleaf, ifelse, "1", "3"),
+      NFI
+    )] |>
+      tidyr::extract(NFI, into = c("genus", "species"), "(.*)_([^_]+)$") |>
+      data.table::as.data.table()
+
     # check if all the species are in the canfi_species table
-    if (nrow(gcMeta2) == length(which(gcMeta$species %in% landRSpecies$name))) {
-      spsMatch <- landRSpecies[
-        , which(name %in% gcMeta2$species),
-        .(CanfiCode, genus, name, forest_type_id)
-      ]
-      spsMatch[, V1 := NULL]
-      names(spsMatch) <- c("CanfiCode", "genus", "species", "forest_type_id")
-      setkey(gcMeta2, species)
-      setkey(spsMatch, species)
-      gcMeta3 <- merge(gcMeta2, spsMatch) # I do not think the order of the columns matter
-      gcMeta <- gcMeta3
-    }
-    stop("Species in gcMeta do not match with those in the LandR::sppEquivalencies_CA table")
+    if (!all(gcMeta$species_lower %in% landRSpecies$name)) stop(
+      "gcMeta specie(s) not found in LandR::sppEquivalencies_CA table: ",
+      paste(shQuote(
+        unique(subset(gcMeta, !species_lower %in% landRSpecies$name)$species)
+      ), collapse = ", "))
+
+    gcMeta <- merge(
+      gcMeta,
+      landRSpecies[, .(species_lower = name, canfi_code, genus, forest_type_id)],
+      by = "species_lower")[, species_lower := NULL]
+    data.table::setkey(gcMeta, gcids)
   }
 
   setkey(gcMeta, gcids)
