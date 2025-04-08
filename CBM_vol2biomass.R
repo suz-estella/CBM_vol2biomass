@@ -123,11 +123,6 @@ defineModule(sim, list(
       desc = "Vector of column names that together, uniquely define growth curve id",
       sourceURL = NA),
     expectsInput(
-      objectName = "level3DT", objectClass = "data.table",
-      desc = "the table linking the spu id, with the disturbance_matrix_id and the events.",
-      "The events are the possible raster values from the disturbance rasters of Wulder and White.",
-      sourceURL = NA),
-    expectsInput(
       objectName = "gcMeta", objectClass = "data.frame",
       desc = paste("Provides equivalent between provincial boundaries",
                    "CBM-id for provincial boundaries and CBM-spatial unit ids"),
@@ -224,15 +219,11 @@ Init <- function(sim) {
   ## not all curves provided are used in the simulation - and ***FOR NOW*** each
   ## pixels only gets assigned one growth curve (no transition, no change in
   ## productivity).
-  ## To run module independently, the gcID used in this translation can be specified here
-  # if(!suppliedElsewhere("level3DT",sim)){
-  #   userGcM3 <- sim$userGcM3
-  # }else{
 
-    userGcM3 <- sim$userGcM3
+  userGcM3 <- sim$userGcM3
     #}
-  spu <- unique(sim$spatialUnits)
-  eco <- unique(na.omit(sim$ecozones))
+  spu <- unique(sim$spatialDT$spatial_unit_id)
+  eco <- unique(sim$spatialDT$ecozones)
 
   thisAdmin <- sim$cbmAdmin[sim$cbmAdmin$SpatialUnitID %in% spu & sim$cbmAdmin$EcoBoundaryID %in% eco, ]
 
@@ -384,20 +375,6 @@ Init <- function(sim) {
   setkey(gcMeta, gcids)
   gcMeta <- merge(gcMeta, gcThisSim)
 
-  # curveID are the columns use to make the unique levels in the factor gcids.
-  # These factor levels are the link between the pixelGroups and the curve to be
-  # use to growth their AGB. In this case (SK) the levels of the factor need to
-  # come from the gcMeta, not the level3DT. Just in case all growth curves need
-  # to be processed. If sim$level3DT exist, its gcids needs to match these.
-  curveID <- sim$curveID
-  if (!is.null(sim$level3DT)) {
-    gcidsLevels <- levels(sim$level3DT$gcids) ## CAMILLE DEC 2024: This didn't work for Vini's example with only 1 option. For his data I used unique(sim$level3DT$gcids)
-    gcids <- factor(gcidsCreate(gcMeta[, ..curveID]), levels = gcidsLevels)
-  } else {
-    gcids <- factor(gcidsCreate(gcMeta[, ..curveID]))
-  }
-
-  set(gcMeta, NULL, "gcids", gcids)
   sim$gcMetaAllCols <- gcMeta
 
   # START processing curves from m3/ha to tonnes of C/ha then to annual increments
