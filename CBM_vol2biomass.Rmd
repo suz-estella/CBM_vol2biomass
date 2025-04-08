@@ -14,44 +14,48 @@ editor_options:
 ```
 # CBM_vol2biomass
 
+:::{.rmdimportant}
+This documentation is work in progress. Potential discrepancies and omissions may exist for the time being. If you find any regarding this module, contact us [here]("https://github.com/PredictiveEcology/CBM_vol2biomass/issues").
+:::
+
 ## Overview
 
-## List of input objects
+## Background
+
+## Inputs
 
 | Name          | Class      | Description | Source                                                                                                                                    |
 |------------|------------|-----------------------|--------------------------|
-| userGCM3      | Data table |             | <https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true> |
-| curveID       | Character  |             |                                                                                                                                           |
-| gcMeta        | Data table |             | <https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/>                                                               |
-| spatialID     | Data table |             |                                                                                                                                           |
-| canfi_species | Data table |             | <https://docs.google.com/spreadsheets/d/1YpJ9MyETyt1LBFO81xTrIdbhjO7GoK3K/>                                                               |
-| ecozones      | Numeric    |             |                                                                                                                                           |
-| table 3       | Data table |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv>                                                                      |
-| table 4       | Data table |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv>                                                                      |
-| table 5       | Data table |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv>                                                                      |
-| table 6       | Data table |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv>                                                                      |
-| table 7       | Data table |             | <https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv>                                                                      |
-| cbmAdmin      | Data table |             | <https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz>                                                                       |
+| userGCM3      | Data table |  User provided growth curve data  | [Google Drive](https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true) |
+| gcMeta        | Data table |  Species and growth curve IDs | [Google Drive](https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/)   |
+| spatialID     | Data table | Summary table of raster input data with 1 row for each `masterRaster` pixel that is not `NA` | CBM_dataPrep_SK                           |
+| ecozones      | Data table | Extracted ecozone IDs for each pixel group | CBM_dataPrep_SK              |
+| spatialUnits | Data table | Extracted spatial unit IDs for each pixel group |
+| table 3       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv)        |
+| table 4       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv)        |
+| table 5       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv)        |
+| table 6       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table6.csv)        |
+| table 7       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table7.csv)        |
+| cbmAdmin      | Data table | Provides ecozone and spatial unit information for provincial boundaries | [Google Drive](https://drive.google.com/file/d/1xdQt9JB5KRIw72uaN5m3iOk8e34t9dyz)         |
 
-## List of output objects
+## Module functioning
+
+## Ouputs
 
 | Name              | Class      | Description |
 |-------------------|------------|-------------|
-| cumPoolsClean     | Data table |             |
-| growth_increments | Data table |             |
-| gcMetaAllCols     | Data table |             |
-| volCurves         | gg (list?) |             |
+| cumPoolsClean     | Data table | Tonnes of carbon/ha both cumnulative and increments, for each growth curve id, by age and ecozone |
+| growth_increments | Data table | 1/2 growth increment matrix |
+| gcMetaAllCols     | Data table | `gcMeta` with ecozones |
+| volCurves         | gg (list?) |  Plots of al growth curves provided by the user |
 
-## Module flow (rename this section later)
-1. 
-2.
-3.
-4.
+## Links to other modules
 
+- [CBM_defaults](https://github.com/PredictiveEcology/CBM_defaults)
+- [CBM_dataPrep_SK](https://github.com/PredictiveEcology/CBM_dataPrep_SK.git)
+- [CBM_core](https://github.com/PredictiveEcology/CBM_core)
 
 ## OLD VERSION
-
-# CBM_vol2biomass
 
 ## Overview
 
