@@ -78,7 +78,7 @@ The @boudewyn2007 models where developed for most locations in the managed fores
 
 These are the ones that are not:
 
-  | Original ID |             Name | Replacement ID | Name |
+  | Original ID |             Name | Equivalent ID | Equivalent ID Name |
   |---|------------------|---|------------------|
   | 8 |  Mixedwood Plains  | 7 |  Atlantic Maritime |
   | 11 |  Taiga Cordillera | 4 | taiga plains |
@@ -90,7 +90,7 @@ These are the ones that are not:
 In `table5` in the NFIS website, there are 5/13 possible jurisdiction id (`juris_id` column). These are the provinces available: AB BC NB NF NT. For the provinces that did nothave a match, we chose the following equivalence in our example:
 
  | Province | Equivalent |
- |----------|------------|
+ |---|------------|
  | PE | NB |
  | QC | NB |
  | ON | NB |
@@ -104,7 +104,7 @@ In `table5` in the NFIS website, there are 5/13 possible jurisdiction id (`juris
 
 Each growth curve is processed by species, one at a time. This requires a match between the species specified in @boudewyn2007 and the leading species associated with each curve provided by the user. We provide means to complete this match and full-stops if there is not match. Growth curves are often developed by strata or multiple characteristics. The simulation list object `curveID` permits the user to identify multiple columns to define growth curves. In our example, the column `gcids` is used to identify unique growth curves.
 
-Once we have all the required information assembled for our study area, we process the information by species, as the @boudewyn2007 parameters are leading species-specific ([`CBMutils::cumPoolsCreate()`](https://github.com/PredictiveEcology/CBMutils/blob/development/R/Boudewyn_cumPoolsCreate.R)), and for each species, we processes each growth curve one at a time (using [`CBMutils::convertM3biom()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L259)). Values of merchantable volume at each age and @boudewyn parameters available on the [NFIS](https://predictiveecology.github.io/spadesCBM/lexicon.html), are used in Equation 1 (matches Eq. 1 in Figure 1) to get *b_m*, total stem wood biomass of merchantable-sized live trees (biomass includes stumps and tops), in metric tonnes per ha (`CBMutils::b_m()` from [`CBMutils`](https://github.com/PredictiveEcology/CBMutils/tree/development) used in [`CBMutils::convertM3biom()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L259)).
+Once we have all the required information assembled for our study area, we process the information by species, as the @boudewyn2007 parameters are leading species-specific ([`CBMutils::cumPoolsCreate()`](https://github.com/PredictiveEcology/CBMutils/blob/development/R/Boudewyn_cumPoolsCreate.R)), and for each species, we processes each growth curve one at a time (using [`CBMutils::convertM3biom()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L259)). Values of merchantable volume at each age and @boudewyn parameters available on the [NFIS](https://predictiveecology.github.io/spadesCBM/lexicon.html), are used in Equation 1 (matches Eq. 1 in Figure 1) to get *b_m*, total stem wood biomass of merchantable-sized live trees (biomass includes stumps and tops), in metric tonnes per ha ([`CBMutils::b_m()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L28) used in [`CBMutils::convertM3biom()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L259)).
 
 **Equation 1.** *b_m = a X* $volume^b$  
 Where 
@@ -119,7 +119,7 @@ Where
 - *b_nm = b_m + b_n*
 - *k*, *a*, and *b* are model parameters fit separately by jurisdiction, ecozone, and lead tree species (Table 4 in @boudewyn2007).
 
-The stem wood biomass of live, sapling-sized trees in tonnes/ha (*b_s*) is extracted from Equation 3 ([CBMutils::sapfac()][`CBMutils`](https://github.com/PredictiveEcology/CBMutils/tree/development) used in [`CBMutils::convertM3biom()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L259) matches Eq. 3 in Figure 1).
+The stem wood biomass of live, sapling-sized trees in tonnes/ha (*b_s*) is extracted from Equation 3 ([`CBMutils::sapfac()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L103) used in [`CBMutils::convertM3biom()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L259) matches Eq. 3 in Figure 1).
 
 **Equation 3.** *saplingfactor = k + a X b_*$m^b$  
 Where
@@ -127,7 +127,7 @@ Where
 - *b_snm = b_nm + b_s*
 - *k*, *a*, and *b* are model parameters fit separately by jurisdiction, ecozone, and lead tree species (Table 5 in @boudewyn2007). Note that sparse data resulted in incomplete coverage of managed forests of Canada. Module users have to decide on parameter selection appropriate for their study area, as we do in our  [CBM_vol2biomass](https://github.com/PredictiveEcology/CBM_vol2biomass.git) example.
 
-Proportions of total tree biomass in stem wood, stem bark, branches and foliage for live trees of all sizes are calculated with Equations 4, 5, 6, and 7 respectively ([CBMutils::biomProp()][`CBMutils`](https://github.com/PredictiveEcology/CBMutils/tree/development) returns a vector of proportion that matches Eq. 4, 5, 6 and 7 in Figure 1 and is used in [`CBMutils::convertM3biom()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L259)).
+Proportions of total tree biomass in stem wood, stem bark, branches and foliage for live trees of all sizes are calculated with Equations 4, 5, 6, and 7 respectively ([`CBMutils::biomProp()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L154) returns a vector of proportion that matches Eq. 4, 5, 6 and 7 in Figure 1 and is used in [`CBMutils::convertM3biom()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L259)).
 
 
 **Equation 4.** $P_(stemwood)$ *= 1/(1 +* $e^(a1+a2xvol+a3xlvol)$ *+* $e^(b1+b2xvol+b3xlvol)$ *+* $e^(c1+c2xvol+c3xlvol)$ *)*  
@@ -140,7 +140,7 @@ Where
 - *a1, a2, a3, b1, b2, b3, c1, c2, c3* are model parameters fit separately by jurisdiction, ecozone and lead tree species (Table 6 in @boudewyn2007).
 e.
 
-Our `CBMutils::biomProp()` [`CBMutils`](https://github.com/PredictiveEcology/CBMutils/tree/development) function also implements the caps on proportion models (Table 7 in  @boudewyn2007). Tonnes of biomass per hectare are converted to tonnes of carbon per hectare in our [`CBMutils::cumPoolsCreate()`](https://github.com/PredictiveEcology/CBMutils/blob/development/R/Boudewyn_cumPoolsCreate.R) functions (this is currently a constant at 0.5 tonnes of carbon per tonnes of biomass but users can modify this value).
+Our [`CBMutils::biomProp()`](https://github.com/PredictiveEcology/CBMutils/blob/bd30825d38c1d8abe7d0d002d494745e19b42ec5/R/Boudewyn_growthCurves.R#L154) function also implements the caps on proportion models (Table 7 in  @boudewyn2007). Tonnes of biomass per hectare are converted to tonnes of carbon per hectare in our [`CBMutils::cumPoolsCreate()`](https://github.com/PredictiveEcology/CBMutils/blob/development/R/Boudewyn_cumPoolsCreate.R) functions (this is currently a constant at 0.5 tonnes of carbon per tonnes of biomass but users can modify this value).
 
 ### Smoothing algorithm
 
