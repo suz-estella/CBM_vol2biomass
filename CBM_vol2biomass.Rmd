@@ -43,9 +43,7 @@ and the objects `level3DT`, [`ecozones`](https://predictiveecology.github.io/spa
 |------------|------------|-----------------------|--------------------------|
 | userGcM3      | Data table |  User provided growth curve data  | [Google Drive](https://docs.google.com/spreadsheets/d/1u7o2BzPZ2Bo7hNcC8nEctNpDmp7ce84m/edit?usp=sharing&ouid=108246386320559871010&rtpof=true&sd=true) |
 | gcMeta        | Data table |  Species and growth curve IDs | [Google Drive](https://docs.google.com/spreadsheets/d/1LYnShgd0Q7idNNKX9hHYju4kMDwMSkW5/)   |
-| level3DT     | Data table | Table of pixelGroups to be simulated with meta data | CBM_dataPrep_SK                           |
-| ecozones      | Data table | Extracted ecozone IDs for each pixel group | CBM_dataPrep_SK              |
-| spatialUnits | Data table | Extracted spatial unit IDs for each pixel group |
+| spatialDT    | Data table  | Summary table of raster input data with 1 row for each `masterRaster pixel` that is not `NA` | CBM_dataPrep_SK |
 | table3       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table3.csv)        |
 | table4       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table4.csv)        |
 | table5       | Data table | Boudewyn table used in volume-to-biomass translations | [National Forest Inventory](https://nfi.nfis.org/resources/biomass_models/appendix2_table5.csv)        |
