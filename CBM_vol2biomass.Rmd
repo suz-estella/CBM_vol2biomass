@@ -170,33 +170,27 @@ The module automatically plots both the direct translation (no smoothing `totMer
 ```{r module_vol2biomass_usage, eval=FALSE}
 #project path and package install
 projectPath <- "~/CBM_vol2biomass"
-repos <- c("predictiveecology.r-universe.dev", getOption("repos"))
-if ((packageVersion("SpaDES.project") < "0.1.1" || packageVersion("Require") < "1.0.1.9002") |>
-    tryCatch(error = function(x) TRUE))
-  install.packages(c("SpaDES.project", "Require"), repos = repos)
+repos <- unique(c("predictiveecology.r-universe.dev", getOption("repos")))
+install.packages("SpaDES.project",
+                 repos = repos)
 
 #setup
 out <- SpaDES.project::setupProject(
   paths = list(projectPath = projectPath),
-
+  
   options = options(
     repos = c(repos = repos),
     reproducible.destinationPath = "inputs"
   ),
   modules =  c("PredictiveEcology/CBM_vol2biomass@development"),
-  require = c("SpaDES.core", "data.table"),
-
-
+  require = c("SpaDES.core"),
+  
+  
   ######### inputs #########
-
-  spatialDT = data.table(gcids = c("52", "50", "49", "58", "61"),
-                         spatial_unit_id = c("28", "28" , "28", "28", "28"),
-                         ecozones = c("9", "9", "9", "9", "9")),
-
-  spatialUnits = c("28"),
-
-  ecozones = c("9")
-
+  
+  spatialDT = data.table(gcids = as.integer(c("52", "50", "49", "58", "61")),
+                         spatial_unit_id = as.integer(c("28", "28" , "28", "28", "28")),
+                         ecozones = as.integer(c("9", "9", "9", "9", "9"))),
 )
 
 #run
