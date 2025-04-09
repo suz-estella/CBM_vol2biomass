@@ -177,6 +177,7 @@ install.packages("SpaDES.project",
 #setup
 out <- SpaDES.project::setupProject(
   paths = list(projectPath = projectPath),
+  overwrite = TRUE,
   
   options = options(
     repos = c(repos = repos),
