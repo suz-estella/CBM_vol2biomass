@@ -168,44 +168,38 @@ The module automatically plots both the direct translation (no smoothing `totMer
 ## Usage
 
 ```{r module_vol2biomass_usage, eval=FALSE}
-library(SpaDES)
-library(magrittr) # this is needed to use "%>%" below
-moduleDir <- "C:/Celine/github/spadesCBM"
-inputDir <- file.path(moduleDir, "inputs") %>% reproducible::checkPath(create = TRUE)
-outputDir <- file.path(moduleDir, "outputs")
-cacheDir <- file.path(outputDir, "cache")
-times <- list(start = 0, end = 10)
+#project path and package install
+projectPath <- "~/CBM_vol2biomass"
+repos <- c("predictiveecology.r-universe.dev", getOption("repos"))
+if ((packageVersion("SpaDES.project") < "0.1.1" || packageVersion("Require") < "1.0.1.9002") |>
+    tryCatch(error = function(x) TRUE))
+  install.packages(c("SpaDES.project", "Require"), repos = repos)
 
-parameters <- list(
-  CBM_vol2biomass = list(.useCache = ".inputObjects")
-  #.progress = list(type = "text", interval = 1), # for a progress bar
-  ## If there are further modules, each can have its own set of parameters:
-  #module1 = list(param1 = value1, param2 = value2),
-  #module2 = list(param1 = value1, param2 = value2)
+#setup
+out <- SpaDES.project::setupProject(
+  paths = list(projectPath = projectPath),
+
+  options = options(
+    repos = c(repos = repos),
+    reproducible.destinationPath = "inputs"
+  ),
+  modules =  c("PredictiveEcology/CBM_vol2biomass@development"),
+  require = c("SpaDES.core", "data.table"),
+
+
+  ######### inputs #########
+
+  spatialDT = data.table(gcids = c("52", "50", "49", "58", "61"),
+                         spatial_unit_id = c("28", "28" , "28", "28", "28"),
+                         ecozones = c("9", "9", "9", "9", "9")),
+
+  spatialUnits = c("28"),
+
+  ecozones = c("9")
+
 )
 
-modules <- list("CBM_vol2biomass")
-objects <- list(
-  #userGcMetafileName <- c("/RIA2019/gcMetaRuns.csv"),
-  #userGcM3 <- c("/RIA2019/gcRIAm3.csv")
+#run
+simBiomass <- simInitAndSpades2(out)
 
-)
-paths <- list(
-  cachePath = cacheDir,
-  modulePath = moduleDir,
-  inputPath = inputDir,
-  outputPath = outputDir
-)
-options(
-    rasterTmpDir = inputDir,
-    reproducible.cachePath = cacheDir,
-    spades.inputPath = inputDir,
-    spades.outputPath = outputDir,
-    spades.modulePath = moduleDir
-  )
-
-myBiomass <- simInit(times = times, params = parameters, modules = modules,
-                 objects = objects)
-
-myBiomassOut <- spades(myBiomass)
 ```
