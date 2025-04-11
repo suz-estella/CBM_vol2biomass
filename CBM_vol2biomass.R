@@ -343,6 +343,7 @@ Init <- function(sim) {
       canfi_code     = CanfiCode,
       name           = tolower(EN_generic_full),
       forest_type_id = sapply(Broadleaf, ifelse, "1", "3"),
+      is_sw = Broadleaf,
       NFI
     )] |>
       tidyr::extract(NFI, into = c("genus", "species"), "(.*)_([^_]+)$") |>
