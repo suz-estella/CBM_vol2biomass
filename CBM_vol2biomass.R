@@ -136,7 +136,7 @@ defineModule(sim, list(
     expectsInput(
       objectName = "gcMetaURL", objectClass = "character",
       desc = "URL for gcMeta")
-  ),,
+  ),
   outputObjects = bindrows(
     # createsOutput("objectName", "objectClass", "output object description", ...),
     createsOutput(
