@@ -36,7 +36,7 @@ The module uses the subset of @boudewyn2007 empirical models that calculate  vol
 ## Inputs
 
 The pieces of information needed to apply the @boudewyn2007 conversion models are growth curves, the leading species for that growth curve, and where on the landscape (which pixel) each growth curve applies to. The user provides the stand-level $m^3/ha$ via `userGCM3`. In this module, `gcMeta` links the growth curve to the leading species,
-and the objects `spatialDT` provides location information. The table below lists the inputs to this module. Inputs `table3` through `table7` are the @boudewyn2007 parameters which are hosted on the National Forest Information System website. We provide the `cbmAdmin` object to help user with the equivalence between provincial and territorial boudaries, Canadian ecozones (**INSERT LINK AND REF HERE**), and [`spatialUnit`](https://predictiveecology.github.io/spadesCBM/lexicon.html#ecozone-vs-spatial-unit)
+and the objects `spatialDT` provides location information. The table below lists the inputs to this module. Inputs `table3` through `table7` are the @boudewyn2007 parameters which are hosted on the National Forest Information System website. We provide the `cbmAdmin` object to help user with the equivalence between provincial and territorial boudaries, Canadian ecozones (as defined in the shapefile use in our model [here](http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip)), and [`spatialUnit`](https://predictiveecology.github.io/spadesCBM/lexicon.html#ecozone-vs-spatial-unit)
 
 | Name          | Class      | Description | Source                                                                                                                                    |
 |------------|------------|-----------------------|--------------------------|
@@ -60,7 +60,7 @@ This module starts off by checking if the provided growth curves (user-provided 
 
 ### Choosing parameters
 
-The @boudewyn2007 models were developed for most locations in the managed forests of Canada. They were developed, when enough data were available, by [ecozone](https://predictiveecology.github.io/spadesCBM/lexicon.html) and stand-level leading species. For ecozone and species combinations that did not have enough data for model development, the user will  have to find alternatives. We chose to replace the models that did not converge with models of similar species in similar ecozone in our example. These are the ecozones in the tables 3 through 7 (`table3`, `table4`, `table5`, `table6` and `table7`):
+The @boudewyn2007 models were developed for most locations in the managed forests of Canada. They were developed, when enough data were available, by [ecozone](https://predictiveecology.github.io/spadesCBM/lexicon.html#ecozone-vs-spatial-unit) and stand-level leading species. For ecozone and species combinations that did not have enough data for model development, the user will  have to find alternatives. We chose to replace the models that did not converge with models of similar species in similar ecozone in our example. These are the ecozones in the tables 3 through 7 (`table3`, `table4`, `table5`, `table6` and `table7`):
 
   |ID |              Name |
   |---|------------------|
