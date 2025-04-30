@@ -147,7 +147,7 @@ defineModule(sim, list(
       the same), by age and ecozone"),
     createsOutput(
       objectName = "growth_increments", objectClass = "matrix",
-      desc = "Matrix of the 1/2 increment that will be used to create the `gcHash`")
+      desc = "Carbon increment matrix by age for each gcids")
   )
 ))
 
