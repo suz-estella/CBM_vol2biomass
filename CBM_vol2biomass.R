@@ -146,7 +146,7 @@ defineModule(sim, list(
       for each growth curve id (in this data.table id and gcids are
       the same), by age and ecozone"),
     createsOutput(
-      objectName = "growth_increments", objectClass = "matrix",
+      objectName = "growth_increments", objectClass = "data.table",
       desc = "Carbon increment matrix by age for each gcids")
   )
 ))
@@ -223,6 +223,7 @@ Init <- function(sim) {
   userGcM3 <- sim$userGcM3
 
   # START reducing Biomass model parameter tables --------------------------------------------
+  if (is.null(sim$spatialDT)) stop("sim$spatialDT not found")
   spu <- unique(sim$spatialDT$spatial_unit_id)
   eco <- unique(sim$spatialDT$ecozones)
 
@@ -287,7 +288,7 @@ Init <- function(sim) {
   # assuming gcMeta has now 5 columns, it needs 2 more: spatial_unit_id and ecozone. This
   # will be used in the convertM3biom() fnct to link to the right ecozone
   # and it only needs the gc we are using in this sim.
-  gcThisSim <- unique(sim$spatialDT[,.(gcids, spatial_unit_id, ecozones)])
+  gcThisSim <- unique(as.data.table(sim$spatialDT)[,.(gcids, spatial_unit_id, ecozones)])
   setkey(gcThisSim, gcids)
   setkey(gcMeta, gcids)
   gcMeta <- merge(gcMeta, gcThisSim)
