@@ -16,10 +16,10 @@ test_that("Module runs with defaults", {
     modules = "CBM_vol2biomass",
     paths   = list(
       projectPath = projectPath,
-      modulePath  = spadesTestPaths$temp$modules,
-      inputPath   = spadesTestPaths$temp$inputs,
-      packagePath = spadesTestPaths$temp$packages,
-      cachePath   = spadesTestPaths$temp$cache,
+      modulePath  = spadesTestPaths$modulePath,
+      packagePath = spadesTestPaths$packagePath,
+      inputPath   = spadesTestPaths$inputPath,
+      cachePath   = spadesTestPaths$cachePath,
       outputPath  = file.path(projectPath, "outputs")
     ),
 
