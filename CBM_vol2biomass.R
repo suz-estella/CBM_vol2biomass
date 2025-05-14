@@ -7,7 +7,9 @@ defineModule(sim, list(
                       "the aboveground live c-pools."),
   keywords = "",
   authors = c(
-    person("Céline", "Boisvenue", email = "celine.boisvenue@nrcan-rncan.gc.ca", role = c("aut", "cre"))
+    person("Céline",  "Boisvenue", email = "celine.boisvenue@nrcan-rncan.gc.ca", role = c("aut", "cre")),
+    person("Camille", "Giuliano",  email = "camsgiu@gmail.com",                  role = c("ctb")),
+    person("Susan",   "Murray",    email = "murray.e.susan@gmail.com",           role = c("ctb"))
   ),
   childModules = character(0),
   version = list(CBM_vol2biomass = "0.0.0.9000"),
